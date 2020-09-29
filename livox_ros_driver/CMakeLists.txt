@@ -2,7 +2,6 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-
 #---------------------------------------------------------------------------------------
 # Start livox_ros_driver project
 #---------------------------------------------------------------------------------------
@@ -30,6 +29,7 @@ find_package(catkin REQUIRED COMPONENTS
 	message_generation
 	rosbag
 	pcl_ros
+	nodelet
 	)
 
 ## Find pcl lib
@@ -64,7 +64,7 @@ endif (APR_FOUND)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also n    eed
 catkin_package(CATKIN_DEPENDS
-	roscpp rospy std_msgs message_runtime
+	roscpp rospy std_msgs message_runtime nodelet
 	pcl_ros
 	)
 
@@ -82,8 +82,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
 ## make sure the livox_sdk_static library is installed
-find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a /usr/local/lib)
+find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a PATHS ./Livox-SDK/build/sdk_core)
 
 if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 	# couldn't find the livox sdk library
@@ -104,6 +105,11 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
+	# add position independent flag to cmakelist of sdk_core CMakeLists.txt if not already added.
+	execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/set_position_independent_flag.sh
+							WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core 
+							RESULT_VARIABLE ret)
+
 	execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build OUTPUT_VARIABLE cmd_res)
 	FOREACH(res ${cmd_res})
 		MESSAGE(${res})
@@ -114,19 +120,20 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
-	include_directories(
-		./
-		${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
-	)
-
-	link_directories(
-		./
-		${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build/sdk_core
-	)
-
 else()
 	message("find livox sdk library success")
 endif()
+
+include_directories(
+	./
+	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
+)
+
+link_directories(
+	./
+	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build/sdk_core
+)
+
 
 ## PCL library
 link_directories(${PCL_LIBRARY_DIRS})
@@ -199,12 +206,54 @@ target_link_libraries(${PROJECT_NAME}_node
 	${APR_LIBRARIES}
 	)
 
+#---------------------------------------------------------------------------------------
+# ADD NODELET LIBRARIES
+#---------------------------------------------------------------------------------------
+include_directories(
+    ${catkin_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
+    ${APR_INCLUDE_DIRS}
+    common
+    common/rapidjson
+    comon/rapdidxml
+    common/comm
+    timesync
+    timesync/user_uart
+    livox_ros_driver
+	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
+    )
 
+add_library(${PROJECT_NAME}_nodelet 
+	livox_ros_driver/livox_ros_driver_nodelet.cpp
+	livox_ros_driver/lvx_file.cpp
+	livox_ros_driver/ldq.cpp
+	livox_ros_driver/lds.cpp
+	livox_ros_driver/lds_lvx.cpp
+	livox_ros_driver/lds_lidar.cpp
+	livox_ros_driver/lds_hub.cpp
+	livox_ros_driver/lddc.cpp
+	livox_ros_driver/livox_ros_driver.cpp
+	timesync/timesync.cpp
+	timesync/user_uart/user_uart.cpp
+	common/comm/comm_protocol.cpp
+	common/comm/sdk_protocol.cpp
+	common/comm/gps_protocol.cpp
+	)
+
+target_link_libraries(${PROJECT_NAME}_nodelet
+	livox_sdk_static.a
+	${Boost_LIBRARY}
+	${catkin_LIBRARIES}
+	${PCL_LIBRARIES}
+	${APR_LIBRARIES}
+	)
+
+add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 #---------------------------------------------------------------------------------------
 # Install
 #---------------------------------------------------------------------------------------
 
-install(TARGETS ${PROJECT_NAME}_node
+install(TARGETS ${PROJECT_NAME}_node ${PROJECT_NAME}_nodelet
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
