@@ -89,9 +89,6 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 	# couldn't find the livox sdk library
 	message("Coudn't find livox sdk library!")
 	message("Download Livox-SDK from github and build&install it please!")
-	message("Download Livox-SDK from github and build&install it please!")
-	message("Download Livox-SDK from github and build&install it please!")
-
 	message("git clone Livox-SDK from github temporarily, only for ROS distro jenkins build!")
 
 	# clone livox sdk source code from github
@@ -101,7 +98,8 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
-	execute_process(COMMAND git clone https://github.com/Livox-SDK/Livox-SDK.git ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK OUTPUT_VARIABLE cmd_res)
+	# Use the oxin-ros repo, which includes fixes to build the driver.
+	execute_process(COMMAND git clone https://github.com/oxin-ros/Livox-SDK.git ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK OUTPUT_VARIABLE cmd_res)
 	FOREACH(res ${cmd_res})
 		MESSAGE(${res})
 	ENDFOREACH()
