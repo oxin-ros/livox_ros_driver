@@ -252,7 +252,7 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
   return published_packet;
 }
 
-void Lddc::FillPointsToPclMsg(PointCloud::Ptr& pcl_msg, \
+void Lddc::FillPointsToPclMsg(boost::shared_ptr<PointCloud>& pcl_msg, \
     LivoxPointXyzrtl* src_point, uint32_t num) {
   LivoxPointXyzrtl* point_xyzrtl = (LivoxPointXyzrtl*)src_point;
   for (uint32_t i = 0; i < num; i++) {
@@ -280,7 +280,7 @@ uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
     return 0;
   }
 
-  PointCloud::Ptr cloud(new PointCloud);
+  boost::shared_ptr<PointCloud> cloud(new PointCloud);
   cloud->header.frame_id.assign(frame_id_);
   cloud->height = 1;
   cloud->width = 0;

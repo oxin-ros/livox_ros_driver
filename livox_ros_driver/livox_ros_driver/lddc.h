@@ -82,7 +82,7 @@ class Lddc {
   void PollingLidarPointCloudData(uint8_t handle, LidarDevice *lidar);
   void PollingLidarImuData(uint8_t handle, LidarDevice *lidar);
   void InitPointcloud2MsgHeader(sensor_msgs::PointCloud2& cloud);
-  void FillPointsToPclMsg(PointCloud::Ptr& pcl_msg, \
+  void FillPointsToPclMsg(boost::shared_ptr<PointCloud>& pcl_msg, \
       LivoxPointXyzrtl* src_point, uint32_t num);
   void FillPointsToCustomMsg(livox_ros_driver::CustomMsg& livox_msg, \
       LivoxPointXyzrtl* src_point, uint32_t num, uint32_t offset_time, \
