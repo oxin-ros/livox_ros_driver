@@ -1,4 +1,4 @@
-# Livox ROS Driver([览沃ROS驱动程序中文说明](https://github.com/Livox-SDK/livox_ros_driver/blob/master/README_CN.md))
+# Livox ROS Driver
 
 livox_ros_driver is a new ROS package, specially used to connect LiDAR products produced by Livox. The driver can be run under ubuntu 14.04/16.04/18.04 operating system with ROS environment (indigo, kinetic, melodic) installed. Tested hardware platforms that can run livox_ros_driver include: Intel x86 cpu platforms, and some ARM64 hardware platforms (such as nvida TX2 / Xavier, etc.).
 
@@ -6,11 +6,11 @@ livox_ros_driver is a new ROS package, specially used to connect LiDAR products 
 
 ### 0.1 Current Version
 
-[v2.6.0](https://github.com/Livox-SDK/livox_ros_driver/releases)
+[v2.6.0](https://github.com/oxin-ros/livox_ros_driver/tags)
 
 ### 0.2 Release History
 
-[Release History](https://github.com/Livox-SDK/livox_ros_driver/releases)
+[Release History](https://github.com/oxin-ros/livox_ros_driver/tags)
 
 ## 1. Install dependencies
 
@@ -30,15 +30,15 @@ For ROS installation, please refer to the ROS installation guide :
 
 ### 1.2 Livox-SDK Installation
 
-1. Download or clone [Livox-SDK](https://github.com/Livox-SDK/Livox-SDK) from Github to local;
+1. Download or clone [Livox-SDK](https://github.com/oxin-ros/Livox-SDK) from Github to local;
 
-2. Refer to the corresponding [README.md](https://github.com/Livox-SDK/Livox-SDK/blob/master/README.md) document to install and run Livox-SDK;
+2. Refer to the corresponding [README.md](https://github.com/oxin-ros/Livox-SDK/blob/master/README.md) document to install and run Livox-SDK;
 
 ## 2. Get and build livox_ros_driver
 
 1. Get livox_ros_driver from GitHub :
 
-　　`git clone https://github.com/Livox-SDK/livox_ros_driver.git ws_livox/src`
+　　`git clone https://github.com/oxin-ros/livox_ros_driver.git ws_core/src`
 
 &ensp;&ensp;&ensp;&ensp;***Note :***
 
@@ -47,7 +47,7 @@ For ROS installation, please refer to the ROS installation guide :
 2. Use the following command to build livox_ros_driver :
 
    ```bash
-   cd ws_livox
+   cd ws_core
    catkin_make
    ```
 
@@ -69,7 +69,7 @@ For ROS installation, please refer to the ROS installation guide :
 
 &ensp;&ensp;&ensp;&ensp;***Note :***
 
-&ensp;&ensp;&ensp;&ensp;(1) the json configuration file is in the "ws_livox/src/livox_ros_driver/config" directory;
+&ensp;&ensp;&ensp;&ensp;(1) the json configuration file is in the "ws_core/src/livox_ros_driver/config" directory;
 
 &ensp;&ensp;&ensp;&ensp;(2) When the connection status of the devices specified in the configuration file is all configured to prohibit connection (false), livox_ros_driver will automatically connect all the devices that are scanned;
 
@@ -93,7 +93,7 @@ For ROS installation, please refer to the ROS installation guide :
 
 ### 4.1 Launch file configuration instructions
 
-All launch files of livox_ros_driver are in the "ws_livox/src/livox_ros_driver/launch" directory. Different launch files have different configuration parameter values and are used in different scenarios :
+All launch files of livox_ros_driver are in the "ws_core/src/livox_ros_driver/launch" directory. Different launch files have different configuration parameter values and are used in different scenarios :
 
 | launch file name          | Description                                                  |
 | ------------------------- | ------------------------------------------------------------ |
@@ -158,7 +158,7 @@ uint8 line              # laser number in lidar
 
 ## 5. Configure LiDAR parameters
 
-In the "ws_livox/src/livox_ros_driver/launch" path, there are two json files, livox_hub_config.json and livox_lidar_config.json.
+In the "ws_core/src/livox_ros_driver/launch" path, there are two json files, livox_hub_config.json and livox_lidar_config.json.
 
 1. When connecting directly to LiDAR, use the livox_lidar_config.json file to configure LiDAR parameters. Examples of file contents are as follows :
 
@@ -234,7 +234,7 @@ HUB configuration parameter
 
 Prepare a GPS device to ensure that the GPS can output UTC time information in GPRMC/GNRMC format through the serial port or USB virtual serial port, and support PPS signal output; then connect the GPS serial port to the host running livox_ros_driver, and connect the GPS PPS signal line to LiDAR. For detailed connection instructions and more introduction to time stamp synchronization, please refer to the following links:
 
-[Timestamp synchronization](https://github.com/Livox-SDK/Livox-SDK/wiki/Timestamp-Synchronization)
+[Timestamp synchronization](https://github.com/oxin-ros/Livox-SDK/wiki/Timestamp-Synchronization)
 
 &ensp;&ensp;&ensp;&ensp;***Note :***
 
@@ -275,9 +275,9 @@ After replacing "/home/livox/test.lvx" in the above command with the local lvx d
 
 ## 8. Application Documents
 
-* [How to use lvx file in ros](https://github.com/Livox-SDK/Livox-SDK/wiki/How-to-use-lvx-file-under-ros)
-* [Set publish frequency](https://github.com/Livox-SDK/Livox-SDK/wiki/Set-publish-frequency)
-* [外参标定与点云显示](https://github.com/Livox-SDK/Livox-SDK/wiki/Calibrate-extrinsic-and-display-under-ros-cn)
+* [How to use lvx file in ros](https://github.com/oxin-ros/Livox-SDK/wiki/How-to-use-lvx-file-under-ros)
+* [Set publish frequency](https://github.com/oxin-ros/Livox-SDK/wiki/Set-publish-frequency)
+* [外参标定与点云显示](https://github.com/oxin-ros/Livox-SDK/wiki/Calibrate-extrinsic-and-display-under-ros-cn)
 
 ## 9. Support
 
