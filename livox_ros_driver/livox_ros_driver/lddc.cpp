@@ -42,16 +42,26 @@
 namespace livox_ros {
 
 /** Lidar Data Distribute Control--------------------------------------------*/
-Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
-    double frq, std::string &frame_id, bool lidar_bag, bool imu_bag)
-    : transfer_format_(format),
-      use_multi_topic_(multi_topic),
-      data_src_(data_src),
-      output_type_(output_type),
-      publish_frq_(frq),
-      frame_id_(frame_id),
-      enable_lidar_bag_(lidar_bag),
-      enable_imu_bag_(imu_bag) {
+Lddc::Lddc(
+  const int format, 
+  const int multi_topic, 
+  const int data_src, 
+  const int output_type,
+  const double frq, 
+  const std::string& lidar_frame_id, 
+  const std::string& imu_frame_id, 
+  const bool lidar_bag, 
+  const bool imu_bag): 
+transfer_format_(format),
+use_multi_topic_(multi_topic),
+data_src_(data_src),
+output_type_(output_type),
+publish_frq_(frq),
+lidar_frame_id_(lidar_frame_id),
+imu_frame_id_(imu_frame_id),
+enable_lidar_bag_(lidar_bag),
+enable_imu_bag_(imu_bag) 
+{
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
   memset(private_pub_, 0, sizeof(private_pub_));
@@ -130,7 +140,7 @@ int32_t Lddc::GetPublishStartTime(LidarDevice *lidar, LidarDataQueue *queue,
 }
 
 void Lddc::InitPointcloud2MsgHeader(sensor_msgs::PointCloud2& cloud) {
-  cloud.header.frame_id.assign(frame_id_);
+  cloud.header.frame_id.assign(lidar_frame_id_);
   cloud.height = 1;
   cloud.width = 0;
   cloud.fields.resize(6);
@@ -281,7 +291,7 @@ uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
   }
 
   boost::shared_ptr<PointCloud> cloud(new PointCloud);
-  cloud->header.frame_id.assign(frame_id_);
+  cloud->header.frame_id.assign(lidar_frame_id_);
   cloud->height = 1;
   cloud->width = 0;
 
@@ -389,7 +399,7 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
   }
 
   livox_ros_driver::CustomMsg livox_msg;
-  livox_msg.header.frame_id.assign(frame_id_);
+  livox_msg.header.frame_id.assign(lidar_frame_id_);
   livox_msg.header.seq = msg_seq;
   ++msg_seq;
   livox_msg.timebase = 0;
@@ -484,7 +494,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   uint32_t published_packet = 0;
 
   sensor_msgs::Imu imu_data;
-  imu_data.header.frame_id = "livox_frame";
+  imu_data.header.frame_id.assign(imu_frame_id_);
 
   uint8_t data_source = lds_->lidars_[handle].data_src;
   StoragePacket storage_packet;

@@ -46,8 +46,16 @@ typedef enum {
 
 class Lddc {
  public:
-  Lddc(int format, int multi_topic, int data_src, int output_type, double frq,
-      std::string &frame_id, bool lidar_bag, bool imu_bag);
+  Lddc(
+    const int format, 
+    const int multi_topic, 
+    const int data_src, 
+    const int output_type, 
+    double frq,
+    const std::string& lidar_frame_id, 
+    const std::string& imu_frame_id, 
+    const bool lidar_bag, 
+    const bool imu_bag);
   ~Lddc();
 
   int RegisterLds(Lds *lds);
@@ -93,7 +101,8 @@ class Lddc {
   uint8_t output_type_;
   double publish_frq_;
   uint32_t publish_period_ns_;
-  std::string frame_id_;
+  std::string lidar_frame_id_;
+  std::string imu_frame_id_;
   bool enable_lidar_bag_;
   bool enable_imu_bag_;
   ros::Publisher *private_pub_[kMaxSourceLidar];

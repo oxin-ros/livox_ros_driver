@@ -71,7 +71,8 @@ int main(int argc, char **argv) {
   int data_src = kSourceRawLidar;
   double publish_freq  = 10.0; /* Hz */
   int output_type      = kOutputToRos;
-  std::string frame_id = "livox_frame";
+  std::string lidar_frame_id = "livox_frame";
+  std::string imu_frame_id = "livox_frame";
   bool lidar_bag = true;
   bool imu_bag   = false;
 
@@ -80,7 +81,8 @@ int main(int argc, char **argv) {
   livox_node.getParam("data_src", data_src);
   livox_node.getParam("publish_freq", publish_freq);
   livox_node.getParam("output_data_type", output_type);
-  livox_node.getParam("frame_id", frame_id);
+  livox_node.getParam("lidar_frame_id", lidar_frame_id);
+  livox_node.getParam("imu_frame_id", imu_frame_id);
   livox_node.getParam("enable_lidar_bag", lidar_bag);
   livox_node.getParam("enable_imu_bag", imu_bag);
   if (publish_freq > 100.0) {
@@ -92,8 +94,16 @@ int main(int argc, char **argv) {
   }
 
   /** Lidar data distribute control and lidar data source set */
-  Lddc *lddc = new Lddc(xfer_format, multi_topic, data_src, output_type,
-                        publish_freq, frame_id, lidar_bag, imu_bag);
+  Lddc *lddc = new Lddc(
+      xfer_format, 
+      multi_topic, 
+      data_src, 
+      output_type,
+      publish_freq, 
+      lidar_frame_id, 
+      imu_frame_id,
+      lidar_bag, 
+      imu_bag);
   lddc->SetRosNode(&livox_node);
 
   int ret = 0;
