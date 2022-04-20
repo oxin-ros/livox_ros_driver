@@ -110,11 +110,11 @@ class Lddc {
   ros::Publisher *private_imu_pub_[kMaxSourceLidar];
   ros::Publisher *global_imu_pub_;
 
-  // Standard deviations
-  double angular_velocity_stddev_;
-  double linear_acceleration_stddev_;
-  const double kDefaultAngularVelocityStdDev_ = 0.012;
-  const double kDefaultLinearAccelerationStdDev_ = 0.098;
+  // Covariances
+  std::vector<double> angular_velocity_cov_;
+  std::vector<double> linear_acceleration_cov_;
+  const std::vector<double> kDefaultAngularVelocityCov_{9, 0.0};
+  const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
 
   ros::NodeHandle *cur_node_;
   rosbag::Bag *bag_;

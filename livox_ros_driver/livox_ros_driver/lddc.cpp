@@ -519,19 +519,18 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   imu_data.linear_acceleration.z = imu->acc_z;
 
   // Fill in covariance matrices
-  cur_node_->param("angular_velocity_stddev", angular_velocity_stddev_, kDefaultAngularVelocityStdDev_);
-  cur_node_->param("linear_acceleration_stddev", linear_acceleration_stddev_, kDefaultLinearAccelerationStdDev_);
+  cur_node_->param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
+  cur_node_->param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
 
-  const double angular_velocity_covariance = angular_velocity_stddev_ * angular_velocity_stddev_;
-  const double linear_acceleration_covariance = linear_acceleration_stddev_ * linear_acceleration_stddev_;
+  // Given that the IMU doesn't produce an orientation estimate,
+  // the element 0 of the associated covariance matrix is -1
+  imu_data.orientation_covariance[0] = -1;
 
-  imu_data.angular_velocity_covariance[0] = angular_velocity_covariance;
-  imu_data.angular_velocity_covariance[4] = angular_velocity_covariance;
-  imu_data.angular_velocity_covariance[8] = angular_velocity_covariance;
+  std::copy(angular_velocity_cov_.begin(), angular_velocity_cov_.end(),
+            imu_data.angular_velocity_covariance.begin());
 
-  imu_data.linear_acceleration_covariance[0] = linear_acceleration_covariance;
-  imu_data.linear_acceleration_covariance[4] = linear_acceleration_covariance;
-  imu_data.linear_acceleration_covariance[8] = linear_acceleration_covariance;
+  std::copy(linear_acceleration_cov_.begin(), linear_acceleration_cov_.end(),
+            imu_data.linear_acceleration_covariance.begin());
 
 
   QueuePopUpdate(queue);
