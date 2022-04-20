@@ -47,14 +47,14 @@ typedef enum {
 class Lddc {
  public:
   Lddc(
-    const int format, 
-    const int multi_topic, 
-    const int data_src, 
-    const int output_type, 
+    const int format,
+    const int multi_topic,
+    const int data_src,
+    const int output_type,
     double frq,
-    const std::string& lidar_frame_id, 
-    const std::string& imu_frame_id, 
-    const bool lidar_bag, 
+    const std::string& lidar_frame_id,
+    const std::string& imu_frame_id,
+    const bool lidar_bag,
     const bool imu_bag);
   ~Lddc();
 
@@ -109,6 +109,12 @@ class Lddc {
   ros::Publisher *global_pub_;
   ros::Publisher *private_imu_pub_[kMaxSourceLidar];
   ros::Publisher *global_imu_pub_;
+
+  // Standard deviations
+  double angular_velocity_stddev_;
+  double linear_acceleration_stddev_;
+  const double kDefaultAngularVelocityStdDev_ = 0.012;
+  const double kDefaultLinearAccelerationStdDev_ = 0.098;
 
   ros::NodeHandle *cur_node_;
   rosbag::Bag *bag_;

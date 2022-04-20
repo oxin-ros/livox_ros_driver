@@ -43,15 +43,15 @@ namespace livox_ros {
 
 /** Lidar Data Distribute Control--------------------------------------------*/
 Lddc::Lddc(
-  const int format, 
-  const int multi_topic, 
-  const int data_src, 
+  const int format,
+  const int multi_topic,
+  const int data_src,
   const int output_type,
-  const double frq, 
-  const std::string& lidar_frame_id, 
-  const std::string& imu_frame_id, 
-  const bool lidar_bag, 
-  const bool imu_bag): 
+  const double frq,
+  const std::string& lidar_frame_id,
+  const std::string& imu_frame_id,
+  const bool lidar_bag,
+  const bool imu_bag):
 transfer_format_(format),
 use_multi_topic_(multi_topic),
 data_src_(data_src),
@@ -60,7 +60,7 @@ publish_frq_(frq),
 lidar_frame_id_(lidar_frame_id),
 imu_frame_id_(imu_frame_id),
 enable_lidar_bag_(lidar_bag),
-enable_imu_bag_(imu_bag) 
+enable_imu_bag_(imu_bag)
 {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
@@ -517,6 +517,22 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   imu_data.linear_acceleration.x = imu->acc_x;
   imu_data.linear_acceleration.y = imu->acc_y;
   imu_data.linear_acceleration.z = imu->acc_z;
+
+  // Fill in covariance matrices
+  cur_node_->param("angular_velocity_stddev", angular_velocity_stddev_, kDefaultAngularVelocityStdDev_);
+  cur_node_->param("linear_acceleration_stddev", linear_acceleration_stddev_, kDefaultLinearAccelerationStdDev_);
+
+  const double angular_velocity_covariance = angular_velocity_stddev_ * angular_velocity_stddev_;
+  const double linear_acceleration_covariance = linear_acceleration_stddev_ * linear_acceleration_stddev_;
+
+  imu_data.angular_velocity_covariance[0] = angular_velocity_covariance;
+  imu_data.angular_velocity_covariance[4] = angular_velocity_covariance;
+  imu_data.angular_velocity_covariance[8] = angular_velocity_covariance;
+
+  imu_data.linear_acceleration_covariance[0] = linear_acceleration_covariance;
+  imu_data.linear_acceleration_covariance[4] = linear_acceleration_covariance;
+  imu_data.linear_acceleration_covariance[8] = linear_acceleration_covariance;
+
 
   QueuePopUpdate(queue);
   ++published_packet;
