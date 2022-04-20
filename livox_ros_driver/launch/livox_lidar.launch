@@ -31,8 +31,8 @@
 		<param name="imu_frame_id" type="string" value="$(arg imu_msg_frame_id)"/>
 		<param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
 		<param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
-		<param name="angular_velocity_cov" type="double" value="$(arg angular_velocity_cov)"/>
-		<param name="linear_acceleration_cov" type="double" value="$(arg linear_acceleration_cov)"/>
+		<rosparam param="angular_velocity_cov">$(arg angular_velocity_cov)</rosparam>
+		<rosparam param="linear_acceleration_cov">$(arg linear_acceleration_cov)</rosparam>
 	</node>
 
 	<group if="$(arg rviz_enable)">
