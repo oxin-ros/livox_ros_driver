@@ -238,19 +238,23 @@ add_library(${PROJECT_NAME}_nodelet
 	)
 
 target_link_libraries(${PROJECT_NAME}_nodelet
-	livox_sdk_static.a
+	# livox_sdk_static.a
 	${Boost_LIBRARY}
 	${catkin_LIBRARIES}
 	${PCL_LIBRARIES}
 	${APR_LIBRARIES}
 	)
 
-add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS}
+				 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${${PROJECT_NAME}_nodelet_EXPORTED_TARGETS})
+
 #---------------------------------------------------------------------------------------
 # Install
 #---------------------------------------------------------------------------------------
 
-install(TARGETS ${PROJECT_NAME}_node ${PROJECT_NAME}_nodelet
+install(TARGETS
+		${PROJECT_NAME}_node
+		${PROJECT_NAME}_nodelet
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -261,6 +265,9 @@ install(DIRECTORY
   config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 	)
+
+install(FILES livox_ros_driver_nodelets.xml
+		DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #---------------------------------------------------------------------------------------
 # end of CMakeList.txt
