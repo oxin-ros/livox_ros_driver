@@ -30,6 +30,7 @@ find_package(catkin REQUIRED COMPONENTS
 	rosbag
 	pcl_ros
 	nodelet
+	pluginlib
 	)
 
 ## Find pcl lib
@@ -64,7 +65,7 @@ endif (APR_FOUND)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also n    eed
 catkin_package(CATKIN_DEPENDS
-	roscpp rospy std_msgs message_runtime nodelet
+	roscpp rospy std_msgs message_runtime nodelet pluginlib
 	pcl_ros
 	)
 
@@ -84,7 +85,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 ## make sure the livox_sdk_static library is installed
-find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a PATHS ./Livox-SDK/build/sdk_core)
+find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a /usr/local/lib)
 
 if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 	# couldn't find the livox sdk library
@@ -105,10 +106,6 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
-	# add position independent flag to cmakelist of sdk_core CMakeLists.txt if not already added.
-	execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/set_position_independent_flag.sh
-							WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core 
-							RESULT_VARIABLE ret)
 
 	execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build OUTPUT_VARIABLE cmd_res)
 	FOREACH(res ${cmd_res})
@@ -120,19 +117,19 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
+	include_directories(
+		./
+		${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
+	)
+
+	link_directories(
+		./
+		${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build/sdk_core
+	)
+
 else()
 	message("find livox sdk library success")
 endif()
-
-include_directories(
-	./
-	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
-)
-
-link_directories(
-	./
-	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build/sdk_core
-)
 
 
 ## PCL library
@@ -223,7 +220,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
     )
 
-add_library(${PROJECT_NAME}_nodelet 
+add_library(${PROJECT_NAME}_nodelet
 	livox_ros_driver/livox_ros_driver_nodelet.cpp
 	livox_ros_driver/lvx_file.cpp
 	livox_ros_driver/ldq.cpp

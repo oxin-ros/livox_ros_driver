@@ -81,31 +81,28 @@ namespace livox_ros
     int data_src = kSourceRawLidar;
     double publish_freq = 10.0; /* Hz */
     int output_type = kOutputToRos;
-    std::string frame_id = "livox_frame";
+    std::string lidar_frame_id = "livox_frame";
+    std::string imu_frame_id = "livox_frame";
+    bool lidar_bag = true;
+    bool imu_bag   = false;
 
     np_.getParam("xfer_format", xfer_format);
     np_.getParam("multi_topic", multi_topic);
     np_.getParam("data_src", data_src);
     np_.getParam("publish_freq", publish_freq);
     np_.getParam("output_data_type", output_type);
-    np_.getParam("frame_id", frame_id);
-    ROS_WARN("multi topic = %d", multi_topic);
-    if (publish_freq > 100.0)
-    {
-      publish_freq = 100.0;
-    }
-    else if (publish_freq < 1.0)
-    {
-      publish_freq = 1.0;
-    }
-    else
-    {
-      publish_freq = publish_freq;
-    }
+    np_.getParam("lidar_frame_id", lidar_frame_id);
+    np_.getParam("imu_frame_id", imu_frame_id);
+    np_.getParam("enable_lidar_bag", lidar_bag);
+    np_.getParam("enable_imu_bag", imu_bag);
+
+    // Clamp publish_freq between 1.0 and 100.0 Hz
+    publish_freq = std::max(std::min(publish_freq, 100.0), 1.0);
 
     /** Lidar data distribute control and lidar data source set */
     lddc_= new Lddc(xfer_format, multi_topic, data_src, output_type,
-                          publish_freq, frame_id);
+                    publish_freq, lidar_frame_id, imu_frame_id,
+                    lidar_bag, imu_bag);
     lddc_->SetRosNode(&np_);
 
     int ret = 0;
@@ -195,13 +192,13 @@ namespace livox_ros
         }
       } while (0);
     }
-    
+
     double poll_freq = publish_freq * 4;
     if (data_src == kSourceLvxFile)
     {
       poll_freq = 2000;
     }
-    
+
     thread_ =  std::shared_ptr<std::thread>(new std::thread(boost::bind(&LivoxRosDriverNodelet::proccessLidarLoop, this, poll_freq)));
 
     return;
