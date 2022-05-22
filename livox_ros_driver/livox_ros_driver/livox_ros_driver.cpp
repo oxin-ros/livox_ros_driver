@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
   livox_node.getParam("enable_imu_bag", imu_bag);
 
   // Clamp publish_freq between 1.0 and 100.0 Hz
-  publish_freq = std::max(std::min(publish_freq, 100.0), 1.0);
+  publish_freq = std::clamp(publish_freq, 1.0, 100.0);
 
   /** Lidar data distribute control and lidar data source set */
   Lddc *lddc = new Lddc(

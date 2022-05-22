@@ -49,10 +49,8 @@ class LivoxRosDriverNodelet : public nodelet::Nodelet
 
     void proccessLidarLoop(const double poll_freq);
 
-    ros::NodeHandle n_;
-    ros::NodeHandle np_;
     std::shared_ptr<std::thread> thread_;
-    Lddc* lddc_; 
+    Lddc* lddc_;
 };
 
 } // namespace livox_ros

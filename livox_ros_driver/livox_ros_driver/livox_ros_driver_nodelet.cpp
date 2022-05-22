@@ -54,8 +54,7 @@ namespace livox_ros
 
   void LivoxRosDriverNodelet::onInit(void)
   {
-    n_ = getNodeHandle();
-    np_ = getPrivateNodeHandle();
+    ros::NodeHandle private_node_handle = getPrivateNodeHandle();
 
     ROS_INFO("Livox Ros Driver Version: %s", LIVOX_ROS_DRIVER_VERSION_STRING);
 
@@ -86,15 +85,15 @@ namespace livox_ros
     bool lidar_bag = true;
     bool imu_bag   = false;
 
-    np_.getParam("xfer_format", xfer_format);
-    np_.getParam("multi_topic", multi_topic);
-    np_.getParam("data_src", data_src);
-    np_.getParam("publish_freq", publish_freq);
-    np_.getParam("output_data_type", output_type);
-    np_.getParam("lidar_frame_id", lidar_frame_id);
-    np_.getParam("imu_frame_id", imu_frame_id);
-    np_.getParam("enable_lidar_bag", lidar_bag);
-    np_.getParam("enable_imu_bag", imu_bag);
+    private_node_handle.getParam("xfer_format", xfer_format);
+    private_node_handle.getParam("multi_topic", multi_topic);
+    private_node_handle.getParam("data_src", data_src);
+    private_node_handle.getParam("publish_freq", publish_freq);
+    private_node_handle.getParam("output_data_type", output_type);
+    private_node_handle.getParam("lidar_frame_id", lidar_frame_id);
+    private_node_handle.getParam("imu_frame_id", imu_frame_id);
+    private_node_handle.getParam("enable_lidar_bag", lidar_bag);
+    private_node_handle.getParam("enable_imu_bag", imu_bag);
 
     // Clamp publish_freq between 1.0 and 100.0 Hz
     publish_freq = std::max(std::min(publish_freq, 100.0), 1.0);
@@ -103,7 +102,7 @@ namespace livox_ros
     lddc_= new Lddc(xfer_format, multi_topic, data_src, output_type,
                     publish_freq, lidar_frame_id, imu_frame_id,
                     lidar_bag, imu_bag);
-    lddc_->SetRosNode(&np_);
+    lddc_->SetRosNode(&private_node_handle);
 
     int ret = 0;
     if (data_src == kSourceRawLidar)
@@ -111,11 +110,11 @@ namespace livox_ros
       ROS_INFO("Data Source is raw lidar.");
 
       std::string user_config_path;
-      np_.getParam("user_config_path", user_config_path);
+      private_node_handle.getParam("user_config_path", user_config_path);
       ROS_INFO("Config file : %s", user_config_path.c_str());
 
       std::string cmdline_bd_code;
-      np_.getParam("cmdline_str", cmdline_bd_code);
+      private_node_handle.getParam("cmdline_str", cmdline_bd_code);
 
       std::vector<std::string> bd_code_list;
       ParseCommandlineInputBdCode(cmdline_bd_code.c_str(), bd_code_list);
@@ -137,11 +136,11 @@ namespace livox_ros
       ROS_INFO("Data Source is hub.");
 
       std::string user_config_path;
-      np_.getParam("user_config_path", user_config_path);
+      private_node_handle.getParam("user_config_path", user_config_path);
       ROS_INFO("Config file : %s", user_config_path.c_str());
 
       std::string cmdline_bd_code;
-      np_.getParam("cmdline_str", cmdline_bd_code);
+      private_node_handle.getParam("cmdline_str", cmdline_bd_code);
 
       std::vector<std::string> bd_code_list;
       ParseCommandlineInputBdCode(cmdline_bd_code.c_str(), bd_code_list);
@@ -163,7 +162,7 @@ namespace livox_ros
       ROS_INFO("Data Source is lvx file.");
 
       std::string cmdline_file_path;
-      np_.getParam("cmdline_file_path", cmdline_file_path);
+      private_node_handle.getParam("cmdline_file_path", cmdline_file_path);
 
       do
       {
