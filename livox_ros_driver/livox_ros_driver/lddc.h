@@ -29,6 +29,7 @@
 
 #include <ros/ros.h>
 #include <rosbag/bag.h>
+#include <sensor_msgs/Imu.h>
 #include <pcl_ros/point_cloud.h>
 #include <livox_ros_driver/CustomMsg.h>
 #include <livox_ros_driver/CustomPoint.h>
@@ -65,7 +66,7 @@ class Lddc {
 
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
-  void SetRosNode(ros::NodeHandle *node) { cur_node_ = node; }
+  void SetRosNode(ros::NodeHandle *node);
 
   void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
   void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
@@ -117,6 +118,7 @@ class Lddc {
   const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
 
   ros::NodeHandle *cur_node_;
+  sensor_msgs::Imu imu_data_;
   rosbag::Bag *bag_;
 };
 

@@ -31,7 +31,6 @@
 #include <pcl_ros/point_cloud.h>
 #include <ros/ros.h>
 #include <rosbag/bag.h>
-#include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
 
 #include <livox_ros_driver/CustomMsg.h>
@@ -96,6 +95,24 @@ Lddc::~Lddc() {
       delete private_imu_pub_[i];
     }
   }
+}
+
+void Lddc::SetRosNode(ros::NodeHandle *node) {
+  cur_node_ = node;
+
+  // Fill in covariance matrices
+  cur_node_->param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
+  cur_node_->param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
+
+  // Given that the IMU doesn't produce an orientation estimate,
+  // the element 0 of the associated covariance matrix is -1
+  imu_data_.orientation_covariance[0] = -1;
+
+  std::copy(angular_velocity_cov_.begin(), angular_velocity_cov_.end(),
+            imu_data_.angular_velocity_covariance.begin());
+
+  std::copy(linear_acceleration_cov_.begin(), linear_acceleration_cov_.end(),
+            imu_data_.linear_acceleration_covariance.begin());
 }
 
 int32_t Lddc::GetPublishStartTime(LidarDevice *lidar, LidarDataQueue *queue,
@@ -493,8 +510,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   uint64_t timestamp = 0;
   uint32_t published_packet = 0;
 
-  sensor_msgs::Imu imu_data;
-  imu_data.header.frame_id.assign(imu_frame_id_);
+  imu_data_.header.frame_id.assign(imu_frame_id_);
 
   uint8_t data_source = lds_->lidars_[handle].data_src;
   StoragePacket storage_packet;
@@ -503,7 +519,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
       reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
   timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
   if (timestamp >= 0) {
-    imu_data.header.stamp =
+    imu_data_.header.stamp =
         ros::Time(timestamp / 1000000000.0);  // to ros time stamp
   }
 
@@ -511,26 +527,12 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   LivoxImuDataProcess(point_buf, raw_packet);
 
   LivoxImuPoint *imu = (LivoxImuPoint *)point_buf;
-  imu_data.angular_velocity.x = imu->gyro_x;
-  imu_data.angular_velocity.y = imu->gyro_y;
-  imu_data.angular_velocity.z = imu->gyro_z;
-  imu_data.linear_acceleration.x = imu->acc_x;
-  imu_data.linear_acceleration.y = imu->acc_y;
-  imu_data.linear_acceleration.z = imu->acc_z;
-
-  // Fill in covariance matrices
-  cur_node_->param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
-  cur_node_->param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
-
-  // Given that the IMU doesn't produce an orientation estimate,
-  // the element 0 of the associated covariance matrix is -1
-  imu_data.orientation_covariance[0] = -1;
-
-  std::copy(angular_velocity_cov_.begin(), angular_velocity_cov_.end(),
-            imu_data.angular_velocity_covariance.begin());
-
-  std::copy(linear_acceleration_cov_.begin(), linear_acceleration_cov_.end(),
-            imu_data.linear_acceleration_covariance.begin());
+  imu_data_.angular_velocity.x = imu->gyro_x;
+  imu_data_.angular_velocity.y = imu->gyro_y;
+  imu_data_.angular_velocity.z = imu->gyro_z;
+  imu_data_.linear_acceleration.x = imu->acc_x;
+  imu_data_.linear_acceleration.y = imu->acc_y;
+  imu_data_.linear_acceleration.z = imu->acc_z;
 
 
   QueuePopUpdate(queue);
@@ -538,11 +540,11 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
 
   ros::Publisher *p_publisher = Lddc::GetCurrentImuPublisher(handle);
   if (kOutputToRos == output_type_) {
-    p_publisher->publish(imu_data);
+    p_publisher->publish(imu_data_);
   } else {
     if (bag_ && enable_imu_bag_) {
       bag_->write(p_publisher->getTopic(), ros::Time(timestamp / 1000000000.0),
-          imu_data);
+          imu_data_);
     }
   }
   return published_packet;
