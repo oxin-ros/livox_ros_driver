@@ -22,16 +22,16 @@ find_package(Boost 1.54 REQUIRED COMPONENTS
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+	message_generation
+	nodelet
+	pcl_ros
+	pluginlib
+	rosbag
 	roscpp
 	rospy
 	sensor_msgs
 	std_msgs
-	message_generation
-	rosbag
-	pcl_ros
-	nodelet
-	pluginlib
-	)
+)
 
 ## Find pcl lib
 find_package(PCL REQUIRED)
@@ -65,9 +65,14 @@ endif (APR_FOUND)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also n    eed
 catkin_package(CATKIN_DEPENDS
-	roscpp rospy std_msgs message_runtime nodelet pluginlib
+	message_runtime
+	nodelet
 	pcl_ros
-	)
+	pluginlib
+	roscpp
+	rospy
+	std_msgs
+)
 
 #---------------------------------------------------------------------------------------
 # Set default build to release
@@ -85,7 +90,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 ## make sure the livox_sdk_static library is installed
-find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a /usr/local/lib)
+find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a PATHS /usr/local/lib ./Livox-SDK/build/sdk_core)
 
 if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 	# couldn't find the livox sdk library
@@ -106,6 +111,10 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
+	# add position independent flag to cmakelist of sdk_core CMakeLists.txt if not already added.
+	execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/set_position_independent_flag.sh
+					WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core
+					RESULT_VARIABLE ret)
 
 	execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build OUTPUT_VARIABLE cmd_res)
 	FOREACH(res ${cmd_res})
@@ -117,20 +126,19 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
-	include_directories(
-		./
-		${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
-	)
-
-	link_directories(
-		./
-		${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build/sdk_core
-	)
-
 else()
 	message("find livox sdk library success")
 endif()
 
+include_directories(
+	./
+	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core/include
+)
+
+link_directories(
+	./
+	${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build/sdk_core
+)
 
 ## PCL library
 link_directories(${PCL_LIBRARY_DIRS})
