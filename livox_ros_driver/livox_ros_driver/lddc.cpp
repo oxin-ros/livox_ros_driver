@@ -57,7 +57,6 @@ data_src_(data_src),
 output_type_(output_type),
 publish_frq_(frq),
 lidar_frame_id_(lidar_frame_id),
-imu_frame_id_(imu_frame_id),
 enable_lidar_bag_(lidar_bag),
 enable_imu_bag_(imu_bag)
 {
@@ -69,6 +68,9 @@ enable_imu_bag_(imu_bag)
   global_imu_pub_ = nullptr;
   cur_node_ = nullptr;
   bag_ = nullptr;
+
+  // Initialise IMU message with constant values
+  imu_data_.header.frame_id.assign(imu_frame_id);
 };
 
 Lddc::~Lddc() {
@@ -99,7 +101,9 @@ Lddc::~Lddc() {
 
 void Lddc::SetRosNode(ros::NodeHandle *node) {
   cur_node_ = node;
+}
 
+void Lddc::SetImuCovariances() {
   // Fill in covariance matrices
   cur_node_->param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
   cur_node_->param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
@@ -509,8 +513,6 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
                               uint8_t handle) {
   uint64_t timestamp = 0;
   uint32_t published_packet = 0;
-
-  imu_data_.header.frame_id.assign(imu_frame_id_);
 
   uint8_t data_source = lds_->lidars_[handle].data_src;
   StoragePacket storage_packet;

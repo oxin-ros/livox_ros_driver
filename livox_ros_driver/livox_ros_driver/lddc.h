@@ -67,6 +67,7 @@ class Lddc {
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
   void SetRosNode(ros::NodeHandle *node);
+  void SetImuCovariances();
 
   void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
   void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
@@ -103,7 +104,6 @@ class Lddc {
   double publish_frq_;
   uint32_t publish_period_ns_;
   std::string lidar_frame_id_;
-  std::string imu_frame_id_;
   bool enable_lidar_bag_;
   bool enable_imu_bag_;
   ros::Publisher *private_pub_[kMaxSourceLidar];
