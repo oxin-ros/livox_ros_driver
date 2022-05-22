@@ -39,7 +39,7 @@ namespace livox_ros
 class LivoxRosDriverNodelet : public nodelet::Nodelet
 {
   public:
-    LivoxRosDriverNodelet();
+    LivoxRosDriverNodelet() = default;
 
     ~LivoxRosDriverNodelet();
 

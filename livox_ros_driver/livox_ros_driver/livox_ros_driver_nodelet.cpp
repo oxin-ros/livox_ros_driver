@@ -40,10 +40,6 @@ namespace livox_ros
 
   const int32_t kSdkVersionMajorLimit = 2;
 
-  LivoxRosDriverNodelet::LivoxRosDriverNodelet()
-  {
-  }
-
   LivoxRosDriverNodelet::~LivoxRosDriverNodelet()
   {
     if (thread_->joinable())
