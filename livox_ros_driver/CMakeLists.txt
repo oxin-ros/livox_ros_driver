@@ -111,12 +111,7 @@ if((NOT LIVOX_SDK_LIBRARY) OR (NOT EXISTS ${LIVOX_SDK_LIBRARY}))
 		MESSAGE(${res})
 	ENDFOREACH()
 
-	# add position independent flag to cmakelist of sdk_core CMakeLists.txt if not already added.
-	execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/set_position_independent_flag.sh
-					WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/sdk_core
-					RESULT_VARIABLE ret)
-
-	execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build OUTPUT_VARIABLE cmd_res)
+	execute_process(COMMAND cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON .. WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Livox-SDK/build OUTPUT_VARIABLE cmd_res)
 	FOREACH(res ${cmd_res})
 		MESSAGE(${res})
 	ENDFOREACH()
@@ -246,7 +241,7 @@ add_library(${PROJECT_NAME}_nodelet
 	)
 
 target_link_libraries(${PROJECT_NAME}_nodelet
-	# livox_sdk_static.a
+	livox_sdk_static.a
 	${Boost_LIBRARY}
 	${catkin_LIBRARIES}
 	${PCL_LIBRARIES}
