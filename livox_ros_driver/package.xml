@@ -6,15 +6,8 @@
 
   <maintainer email="dev@livoxtech.com">Livox Dev Team</maintainer>
 
-<<<<<<< HEAD
-
   <license>MIT</license>
 
-
-=======
-  <license>MIT</license>
-
->>>>>>> devel
   <author email="dev@livoxtech.com">Livox Dev Team</author>
 
   <buildtool_depend>catkin</buildtool_depend>
