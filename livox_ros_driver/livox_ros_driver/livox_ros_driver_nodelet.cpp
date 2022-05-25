@@ -87,10 +87,18 @@ namespace livox_ros
     publish_freq = std::clamp(publish_freq, 1.0, 100.0);
 
     /** Lidar data distribute control and lidar data source set */
-    lddc_= new Lddc(xfer_format, multi_topic, data_src, output_type,
-                    publish_freq, lidar_frame_id, imu_frame_id,
-                    lidar_bag, imu_bag);
+    lddc_= new Lddc(
+      xfer_format, 
+      multi_topic, 
+      data_src, 
+      output_type,
+      publish_freq, 
+      lidar_frame_id, 
+      imu_frame_id,
+      lidar_bag, 
+      imu_bag);
     lddc_->SetRosNode(&private_node_handle);
+    lddc_->SetImuCovariances();
 
     int ret = 0;
     if (data_src == kSourceRawLidar)

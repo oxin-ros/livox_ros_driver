@@ -8,6 +8,8 @@
 
   <license>MIT</license>
 
+  <url type="website">http://wiki.ros.org/livox_ros_driver</url>
+
   <author email="dev@livoxtech.com">Livox Dev Team</author>
 
   <buildtool_depend>catkin</buildtool_depend>
@@ -39,12 +41,15 @@
   <exec_depend>rosbag</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>rviz</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
   <depend>sensor_msgs</depend>
   <depend>git</depend>
   <depend>apr</depend>
 
+  <test_depend>roslaunch</test_depend>
+  
   <export>
     <nodelet plugin="${prefix}/livox_ros_driver_nodelets.xml"/>
   </export>

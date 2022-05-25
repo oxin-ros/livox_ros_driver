@@ -31,7 +31,6 @@
 #include <pcl_ros/point_cloud.h>
 #include <ros/ros.h>
 #include <rosbag/bag.h>
-#include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
 
 #include <livox_ros_driver/CustomMsg.h>
@@ -58,7 +57,6 @@ data_src_(data_src),
 output_type_(output_type),
 publish_frq_(frq),
 lidar_frame_id_(lidar_frame_id),
-imu_frame_id_(imu_frame_id),
 enable_lidar_bag_(lidar_bag),
 enable_imu_bag_(imu_bag)
 {
@@ -70,6 +68,9 @@ enable_imu_bag_(imu_bag)
   global_imu_pub_ = nullptr;
   cur_node_ = nullptr;
   bag_ = nullptr;
+
+  // Initialise IMU message with constant values
+  imu_data_.header.frame_id.assign(imu_frame_id);
 };
 
 Lddc::~Lddc() {
@@ -96,6 +97,26 @@ Lddc::~Lddc() {
       delete private_imu_pub_[i];
     }
   }
+}
+
+void Lddc::SetRosNode(ros::NodeHandle *node) {
+  cur_node_ = node;
+}
+
+void Lddc::SetImuCovariances() {
+  // Fill in covariance matrices
+  cur_node_->param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
+  cur_node_->param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
+
+  // Given that the IMU doesn't produce an orientation estimate,
+  // the element 0 of the associated covariance matrix is -1
+  imu_data_.orientation_covariance[0] = -1;
+
+  std::copy(angular_velocity_cov_.begin(), angular_velocity_cov_.end(),
+            imu_data_.angular_velocity_covariance.begin());
+
+  std::copy(linear_acceleration_cov_.begin(), linear_acceleration_cov_.end(),
+            imu_data_.linear_acceleration_covariance.begin());
 }
 
 int32_t Lddc::GetPublishStartTime(LidarDevice *lidar, LidarDataQueue *queue,
@@ -447,8 +468,11 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
       PointConvertHandler pf_point_convert =
           GetConvertHandler(lidar->raw_data_type);
       if (pf_point_convert) {
-        pf_point_convert(point_buf, raw_packet, lidar->extrinsic_parameter, \
-            line_num);
+        pf_point_convert(
+          point_buf, 
+          raw_packet, 
+          lidar->extrinsic_parameter,
+          line_num);
       } else {
         /* Skip the packet */
         ROS_INFO("Lidar[%d] unkown packet type[%d]", handle,
@@ -456,12 +480,20 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
         break;
       }
     } else {
-      LivoxPointToPxyzrtl(point_buf, raw_packet, lidar->extrinsic_parameter, \
-          line_num);
+      LivoxPointToPxyzrtl(
+        point_buf, 
+        raw_packet, 
+        lidar->extrinsic_parameter,
+        line_num);
     }
     LivoxPointXyzrtl *dst_point = (LivoxPointXyzrtl *)point_buf;
-    FillPointsToCustomMsg(livox_msg, dst_point, single_point_num, \
-        packet_offset_time, point_interval, echo_num);
+    FillPointsToCustomMsg(
+      livox_msg,
+      dst_point, 
+      single_point_num, 
+      packet_offset_time, 
+      point_interval, 
+      echo_num);
 
     if (!is_zero_packet) {
       QueuePopUpdate(queue);
@@ -479,8 +511,10 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
     p_publisher->publish(livox_msg);
   } else {
     if (bag_ && enable_lidar_bag_) {
-      bag_->write(p_publisher->getTopic(), ros::Time::now(),
-          livox_msg);
+      bag_->write(
+        p_publisher->getTopic(),
+        ros::Time::now(),
+        livox_msg);
     }
   }
 
@@ -495,9 +529,6 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   uint64_t timestamp = 0;
   uint32_t published_packet = 0;
 
-  sensor_msgs::Imu imu_data;
-  imu_data.header.frame_id.assign(imu_frame_id_);
-
   uint8_t data_source = lds_->lidars_[handle].data_src;
   StoragePacket storage_packet;
   QueuePrePop(queue, &storage_packet);
@@ -505,7 +536,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
       reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
   timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
   if (timestamp >= 0) {
-    imu_data.header.stamp =
+    imu_data_.header.stamp =
         ros::Time::now();  // to ros time stamp
   }
 
@@ -513,23 +544,26 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   LivoxImuDataProcess(point_buf, raw_packet);
 
   LivoxImuPoint *imu = (LivoxImuPoint *)point_buf;
-  imu_data.angular_velocity.x = imu->gyro_x;
-  imu_data.angular_velocity.y = imu->gyro_y;
-  imu_data.angular_velocity.z = imu->gyro_z;
-  imu_data.linear_acceleration.x = imu->acc_x;
-  imu_data.linear_acceleration.y = imu->acc_y;
-  imu_data.linear_acceleration.z = imu->acc_z;
+  imu_data_.angular_velocity.x = imu->gyro_x;
+  imu_data_.angular_velocity.y = imu->gyro_y;
+  imu_data_.angular_velocity.z = imu->gyro_z;
+  imu_data_.linear_acceleration.x = imu->acc_x;
+  imu_data_.linear_acceleration.y = imu->acc_y;
+  imu_data_.linear_acceleration.z = imu->acc_z;
+
 
   QueuePopUpdate(queue);
   ++published_packet;
 
   ros::Publisher *p_publisher = Lddc::GetCurrentImuPublisher(handle);
   if (kOutputToRos == output_type_) {
-    p_publisher->publish(imu_data);
+    p_publisher->publish(imu_data_);
   } else {
     if (bag_ && enable_imu_bag_) {
-      bag_->write(p_publisher->getTopic(), ros::Time::now(),
-          imu_data);
+      bag_->write(
+        p_publisher->getTopic(), 
+        ros::Time::now(),
+        imu_data_);
     }
   }
   return published_packet;

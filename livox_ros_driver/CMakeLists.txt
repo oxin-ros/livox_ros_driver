@@ -229,5 +229,14 @@ install(FILES livox_ros_driver_nodelets.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #---------------------------------------------------------------------------------------
+# Testing
+#---------------------------------------------------------------------------------------
+
+if (CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  roslaunch_add_file_check(launch)
+endif()
+
+#---------------------------------------------------------------------------------------
 # end of CMakeList.txt
 #---------------------------------------------------------------------------------------

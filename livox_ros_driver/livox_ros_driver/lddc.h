@@ -29,6 +29,7 @@
 
 #include <ros/ros.h>
 #include <rosbag/bag.h>
+#include <sensor_msgs/Imu.h>
 #include <pcl_ros/point_cloud.h>
 #include <livox_ros_driver/CustomMsg.h>
 #include <livox_ros_driver/CustomPoint.h>
@@ -47,14 +48,14 @@ typedef enum {
 class Lddc {
  public:
   Lddc(
-    const int format, 
-    const int multi_topic, 
-    const int data_src, 
-    const int output_type, 
+    const int format,
+    const int multi_topic,
+    const int data_src,
+    const int output_type,
     double frq,
-    const std::string& lidar_frame_id, 
-    const std::string& imu_frame_id, 
-    const bool lidar_bag, 
+    const std::string& lidar_frame_id,
+    const std::string& imu_frame_id,
+    const bool lidar_bag,
     const bool imu_bag);
   ~Lddc();
 
@@ -65,7 +66,8 @@ class Lddc {
 
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
-  void SetRosNode(ros::NodeHandle *node) { cur_node_ = node; }
+  void SetRosNode(ros::NodeHandle *node);
+  void SetImuCovariances();
 
   void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
   void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
@@ -102,7 +104,6 @@ class Lddc {
   double publish_frq_;
   uint32_t publish_period_ns_;
   std::string lidar_frame_id_;
-  std::string imu_frame_id_;
   bool enable_lidar_bag_;
   bool enable_imu_bag_;
   ros::Publisher *private_pub_[kMaxSourceLidar];
@@ -110,7 +111,14 @@ class Lddc {
   ros::Publisher *private_imu_pub_[kMaxSourceLidar];
   ros::Publisher *global_imu_pub_;
 
+  // Covariances
+  std::vector<double> angular_velocity_cov_;
+  std::vector<double> linear_acceleration_cov_;
+  const std::vector<double> kDefaultAngularVelocityCov_{9, 0.0};
+  const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
+
   ros::NodeHandle *cur_node_;
+  sensor_msgs::Imu imu_data_;
   rosbag::Bag *bag_;
 };
 

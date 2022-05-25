@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
       lidar_bag,
       imu_bag);
   lddc->SetRosNode(&livox_node);
+  lddc->SetImuCovariances();
 
   int ret = 0;
   if (data_src == kSourceRawLidar) {
