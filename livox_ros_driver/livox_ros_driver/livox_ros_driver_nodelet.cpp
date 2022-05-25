@@ -98,6 +98,7 @@ namespace livox_ros
       lidar_bag, 
       imu_bag);
     lddc_->SetRosNode(&private_node_handle);
+    lddc_->SetImuCovariances();
 
     int ret = 0;
     if (data_src == kSourceRawLidar)
