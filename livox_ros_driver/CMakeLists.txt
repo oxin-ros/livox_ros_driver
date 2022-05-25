@@ -2,7 +2,6 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-
 #---------------------------------------------------------------------------------------
 # Start livox_ros_driver project
 #---------------------------------------------------------------------------------------
@@ -23,14 +22,16 @@ find_package(Boost 1.54 REQUIRED COMPONENTS
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+    livox_sdk
+    message_generation
+    nodelet
+    pcl_ros
+    pluginlib
+    rosbag
     roscpp
     rospy
     sensor_msgs
     std_msgs
-    message_generation
-    rosbag
-    pcl_ros
-    livox_sdk
 )
 
 ## Find pcl lib
@@ -65,12 +66,14 @@ endif (APR_FOUND)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(CATKIN_DEPENDS
-    roscpp 
-    rospy 
-    std_msgs 
-    message_runtime
-    pcl_ros
     livox_sdk
+    message_runtime
+    nodelet
+    pcl_ros
+    pluginlib
+    roscpp
+    rospy
+    std_msgs
 )
 
 #---------------------------------------------------------------------------------------
@@ -110,7 +113,7 @@ target_compile_options(${PROJECT_NAME}_node
 # add projects that depend on
 #---------------------------------------------------------------------------------------
 add_dependencies(
-    ${PROJECT_NAME}_node 
+    ${PROJECT_NAME}_node
     ${PROJECT_NAME}_generate_messages_cpp
 )
 
@@ -161,12 +164,56 @@ target_link_libraries(${PROJECT_NAME}_node
     ${APR_LIBRARIES}
 )
 
+#---------------------------------------------------------------------------------------
+# ADD NODELET LIBRARIES
+#---------------------------------------------------------------------------------------
+include_directories(
+    ${catkin_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
+    ${APR_INCLUDE_DIRS}
+    common
+    common/rapidjson
+    comon/rapdidxml
+    common/comm
+    timesync
+    timesync/user_uart
+    livox_ros_driver
+    )
+
+add_library(${PROJECT_NAME}_nodelet
+    livox_ros_driver/livox_ros_driver_nodelet.cpp
+    livox_ros_driver/lvx_file.cpp
+    livox_ros_driver/ldq.cpp
+    livox_ros_driver/lds.cpp
+    livox_ros_driver/lds_lvx.cpp
+    livox_ros_driver/lds_lidar.cpp
+    livox_ros_driver/lds_hub.cpp
+    livox_ros_driver/lddc.cpp
+    livox_ros_driver/livox_ros_driver.cpp
+    timesync/timesync.cpp
+    timesync/user_uart/user_uart.cpp
+    common/comm/comm_protocol.cpp
+    common/comm/sdk_protocol.cpp
+    common/comm/gps_protocol.cpp
+    )
+
+target_link_libraries(${PROJECT_NAME}_nodelet
+    ${Boost_LIBRARY}
+    ${catkin_LIBRARIES}
+    ${PCL_LIBRARIES}
+    ${APR_LIBRARIES}
+    )
+
+add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS}
+                 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${${PROJECT_NAME}_nodelet_EXPORTED_TARGETS})
 
 #---------------------------------------------------------------------------------------
 # Install
 #---------------------------------------------------------------------------------------
 
-install(TARGETS ${PROJECT_NAME}_node
+install(TARGETS
+        ${PROJECT_NAME}_node
+        ${PROJECT_NAME}_nodelet
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -177,6 +224,9 @@ install(DIRECTORY
     config
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+install(FILES livox_ros_driver_nodelets.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #---------------------------------------------------------------------------------------
 # end of CMakeList.txt

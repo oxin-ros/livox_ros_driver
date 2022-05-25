@@ -1,0 +1,7 @@
+<library path="lib/liblivox_ros_driver_nodelet">
+  <class name="livox_ros_driver/LivoxRosDriverNodelet"
+         type="livox_ros::LivoxRosDriverNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>Nodelet version of livox ros driver.</description>
+  </class>
+</library>

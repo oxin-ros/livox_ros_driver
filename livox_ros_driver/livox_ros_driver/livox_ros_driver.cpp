@@ -85,24 +85,20 @@ int main(int argc, char **argv) {
   livox_node.getParam("imu_frame_id", imu_frame_id);
   livox_node.getParam("enable_lidar_bag", lidar_bag);
   livox_node.getParam("enable_imu_bag", imu_bag);
-  if (publish_freq > 100.0) {
-    publish_freq = 100.0;
-  } else if (publish_freq < 0.1) {
-    publish_freq = 0.1;
-  } else {
-    publish_freq = publish_freq;
-  }
+
+  // Clamp publish_freq between 1.0 and 100.0 Hz
+  publish_freq = std::clamp(publish_freq, 1.0, 100.0);
 
   /** Lidar data distribute control and lidar data source set */
   Lddc *lddc = new Lddc(
-      xfer_format, 
-      multi_topic, 
-      data_src, 
+      xfer_format,
+      multi_topic,
+      data_src,
       output_type,
-      publish_freq, 
-      lidar_frame_id, 
+      publish_freq,
+      lidar_frame_id,
       imu_frame_id,
-      lidar_bag, 
+      lidar_bag,
       imu_bag);
   lddc->SetRosNode(&livox_node);
 
