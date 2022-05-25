@@ -23,8 +23,8 @@
 //
 
 #include "include/livox_ros_driver_nodelet.h"
-#include <pluginlib/class_list_macros.h>
 
+#include <algorithm>
 #include <chrono>
 #include <vector>
 
@@ -39,14 +39,6 @@ namespace livox_ros
 {
 
   const int32_t kSdkVersionMajorLimit = 2;
-
-  LivoxRosDriverNodelet::~LivoxRosDriverNodelet()
-  {
-    if (thread_->joinable())
-    {
-      thread_->join();
-    }
-  }
 
   void LivoxRosDriverNodelet::onInit(void)
   {
@@ -92,7 +84,7 @@ namespace livox_ros
     private_node_handle.getParam("enable_imu_bag", imu_bag);
 
     // Clamp publish_freq between 1.0 and 100.0 Hz
-    publish_freq = std::max(std::min(publish_freq, 100.0), 1.0);
+    publish_freq = std::clamp(publish_freq, 1.0, 100.0);
 
     /** Lidar data distribute control and lidar data source set */
     lddc_= new Lddc(xfer_format, multi_topic, data_src, output_type,
@@ -194,21 +186,18 @@ namespace livox_ros
       poll_freq = 2000;
     }
 
-    thread_ =  std::shared_ptr<std::thread>(new std::thread(boost::bind(&LivoxRosDriverNodelet::proccessLidarLoop, this, poll_freq)));
+    const ros::Timer poll_lidars = private_node_handle.createTimer(ros::Duration(ros::Rate(poll_freq)), &LivoxRosDriverNodelet::proccessLidarLoop, this);
 
     return;
   }
 
-  void LivoxRosDriverNodelet::proccessLidarLoop(const double poll_freq)
+  void LivoxRosDriverNodelet::proccessLidarLoop(const ros::TimerEvent&)
   {
-    ros::Rate r(poll_freq);
-    while (ros::ok())
-    {
-      lddc_->DistributeLidarData();
-      r.sleep();
-    }
+    lddc_->DistributeLidarData();
   }
 
 } //namespace
 
+// Pluginlib include.
+#include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS(livox_ros::LivoxRosDriverNodelet, nodelet::Nodelet)

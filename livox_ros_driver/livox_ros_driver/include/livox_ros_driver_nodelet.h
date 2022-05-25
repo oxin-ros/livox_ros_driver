@@ -21,9 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-
-#ifndef LIVOX_ROS_DRIVER_INClUDE_LIVOX_ROS_DRIVER_NODELET_H_
-#define LIVOX_ROS_DRIVER_INClUDE_LIVOX_ROS_DRIVER_NODELET_H_
+#pragma once
 
 #include "livox_ros_driver.h"
 #include "../lddc.h"
@@ -38,21 +36,15 @@ namespace livox_ros
 
 class LivoxRosDriverNodelet : public nodelet::Nodelet
 {
-  public:
-    LivoxRosDriverNodelet() = default;
+    public:
+        LivoxRosDriverNodelet() = default;
+        ~LivoxRosDriverNodelet() = default;
 
-    ~LivoxRosDriverNodelet();
+        void onInit(void);
 
-    void onInit(void);
-
-  private:
-
-    void proccessLidarLoop(const double poll_freq);
-
-    std::shared_ptr<std::thread> thread_;
-    Lddc* lddc_;
+    private:
+        void proccessLidarLoop(const ros::TimerEvent&);
+        Lddc* lddc_;
 };
 
 } // namespace livox_ros
-
-#endif
