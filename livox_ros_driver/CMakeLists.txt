@@ -67,11 +67,13 @@ catkin_package(CATKIN_DEPENDS
     livox_sdk
     message_runtime
     nodelet
-    pcl_ros
     pluginlib
     roscpp
     rospy
     std_msgs
+    # The version of PCL included by pcl_ros conflicts with the version used below.
+    # These libraries pull in the system version of the PCL headers, causing build issues.
+    # pcl_ros
 )
 
 #---------------------------------------------------------------------------------------
