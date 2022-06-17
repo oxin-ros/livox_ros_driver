@@ -35,7 +35,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## Find pcl lib
-find_package(PCL REQUIRED)
+# Use the system provided PCL for now.
+find_package(PCL 1.8 REQUIRED)
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
@@ -51,10 +52,6 @@ generate_messages(DEPENDENCIES
 
 find_package(PkgConfig)
 pkg_check_modules(APR apr-1)
-if (APR_FOUND)
-    message(${APR_INCLUDE_DIRS})
-    message(${APR_LIBRARIES})
-endif (APR_FOUND)
 
 ###################################
 ## catkin specific configuration ##
