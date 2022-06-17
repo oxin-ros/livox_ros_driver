@@ -1,56 +1,60 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>livox_ros_driver</name>
-  <version>2.0.0</version>
-  <description>The ROS device driver for Livox 3D LiDARs and Livox Hub.</description>
+    <name>livox_ros_driver</name>
+    <version>2.0.0</version>
+    <description>The ROS device driver for Livox 3D LiDARs and Livox Hub.</description>
 
-  <maintainer email="dev@livoxtech.com">Livox Dev Team</maintainer>
+    <maintainer email="dev@livoxtech.com">Livox Dev Team</maintainer>
 
-  <license>MIT</license>
+    <license>MIT</license>
 
-  <url type="website">http://wiki.ros.org/livox_ros_driver</url>
+    <url type="website">http://wiki.ros.org/livox_ros_driver</url>
 
-  <author email="dev@livoxtech.com">Livox Dev Team</author>
+    <author email="dev@livoxtech.com">Livox Dev Team</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+    <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>livox_sdk</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_depend>nodelet</build_depend>
-  <build_depend>pcl_ros</build_depend>
-  <build_depend>pluginlib</build_depend>
-  <build_depend>rosbag</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rospy</build_depend>
-  <build_depend>std_msgs</build_depend>
+    <!--
+        NOTE: If we add pcl_ros as a build dependency, it will transtively include the system PCL headers,
+        which will cause build issues when linking against our custom-built PCL library, so we need to remove it.
+    -->
+    <!-- <build_depend>pcl_ros</build_depend> -->
+    <build_depend>livox_sdk</build_depend>
+    <build_depend>message_generation</build_depend>
+    <build_depend>nodelet</build_depend>
+    <build_depend>pluginlib</build_depend>
+    <build_depend>rosbag</build_depend>
+    <build_depend>roscpp</build_depend>
+    <build_depend>rospy</build_depend>
+    <build_depend>std_msgs</build_depend>
 
-  <build_export_depend>livox_sdk</build_export_depend>
-  <build_export_depend>nodelet</build_export_depend>
-  <build_export_depend>pcl_ros</build_export_depend>
-  <build_export_depend>pluginlib</build_export_depend>
-  <build_export_depend>rosbag</build_export_depend>
-  <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>rospy</build_export_depend>
-  <build_export_depend>std_msgs</build_export_depend>
+    <build_export_depend>livox_sdk</build_export_depend>
+    <build_export_depend>nodelet</build_export_depend>
+    <build_export_depend>pcl_ros</build_export_depend>
+    <build_export_depend>pluginlib</build_export_depend>
+    <build_export_depend>rosbag</build_export_depend>
+    <build_export_depend>roscpp</build_export_depend>
+    <build_export_depend>rospy</build_export_depend>
+    <build_export_depend>std_msgs</build_export_depend>
 
-  <exec_depend>livox_sdk</exec_depend>
-  <exec_depend>message_runtime</exec_depend>
-  <exec_depend>nodelet</exec_depend>
-  <exec_depend>pcl_ros</exec_depend>
-  <exec_depend>pluginlib</exec_depend>
-  <exec_depend>rosbag</exec_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>rviz</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
+    <exec_depend>livox_sdk</exec_depend>
+    <exec_depend>message_runtime</exec_depend>
+    <exec_depend>nodelet</exec_depend>
+    <exec_depend>pcl_ros</exec_depend>
+    <exec_depend>pluginlib</exec_depend>
+    <exec_depend>rosbag</exec_depend>
+    <exec_depend>roscpp</exec_depend>
+    <exec_depend>rospy</exec_depend>
+    <exec_depend>rviz</exec_depend>
+    <exec_depend>std_msgs</exec_depend>
 
-  <depend>sensor_msgs</depend>
-  <depend>git</depend>
-  <depend>apr</depend>
+    <depend>sensor_msgs</depend>
+    <depend>git</depend>
+    <depend>apr</depend>
 
-  <test_depend>roslaunch</test_depend>
-  
-  <export>
-    <nodelet plugin="${prefix}/livox_ros_driver_nodelets.xml"/>
-  </export>
+    <test_depend>roslaunch</test_depend>
+
+    <export>
+      <nodelet plugin="${prefix}/livox_ros_driver_nodelets.xml"/>
+    </export>
 </package>

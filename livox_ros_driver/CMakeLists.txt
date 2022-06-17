@@ -25,18 +25,19 @@ find_package(catkin REQUIRED COMPONENTS
     livox_sdk
     message_generation
     nodelet
-    pcl_ros
     pluginlib
     rosbag
     roscpp
     rospy
     sensor_msgs
     std_msgs
+    # The version of PCL included by pcl_ros conflicts with the version used below.
+    # These libraries pull in the system version of the PCL headers, causing build issues.
+    # pcl_ros
 )
 
-## Find pcl lib
-# Use the system provided PCL for now.
-find_package(PCL 1.8 REQUIRED)
+## Find pcl lib.
+find_package(PCL 1.12 REQUIRED)
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
