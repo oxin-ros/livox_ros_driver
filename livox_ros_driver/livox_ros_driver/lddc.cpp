@@ -683,9 +683,6 @@ ros::Publisher *Lddc::GetCurrentPublisher(uint8_t handle) {
           name_str, queue_size);
     }
   }
-  else {
-    std::runtime_error("Couldn't find a suitable publisher for Livox Lidar");
-  }
 
   return *pub;
 }
