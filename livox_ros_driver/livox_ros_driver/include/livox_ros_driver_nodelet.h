@@ -45,6 +45,7 @@ class LivoxRosDriverNodelet : public nodelet::Nodelet
     private:
         void proccessLidarLoop(const ros::TimerEvent&);
         Lddc* lddc_;
+        ros::Timer poll_lidars_;
 };
 
 } // namespace livox_ros

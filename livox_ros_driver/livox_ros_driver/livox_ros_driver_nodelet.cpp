@@ -42,6 +42,7 @@ namespace livox_ros
 
   void LivoxRosDriverNodelet::onInit(void)
   {
+    ros::NodeHandle node_handle = getNodeHandle();
     ros::NodeHandle private_node_handle = getPrivateNodeHandle();
 
     ROS_INFO("Livox Ros Driver Version: %s", LIVOX_ROS_DRIVER_VERSION_STRING);
@@ -88,16 +89,16 @@ namespace livox_ros
 
     /** Lidar data distribute control and lidar data source set */
     lddc_= new Lddc(
-      xfer_format, 
-      multi_topic, 
-      data_src, 
+      xfer_format,
+      multi_topic,
+      data_src,
       output_type,
-      publish_freq, 
-      lidar_frame_id, 
+      publish_freq,
+      lidar_frame_id,
       imu_frame_id,
-      lidar_bag, 
+      lidar_bag,
       imu_bag);
-    lddc_->SetRosNode(&private_node_handle);
+    lddc_->SetRosNodeHandlers(&node_handle, &private_node_handle);
     lddc_->SetImuCovariances();
 
     int ret = 0;
@@ -194,9 +195,7 @@ namespace livox_ros
       poll_freq = 2000;
     }
 
-    const ros::Timer poll_lidars = private_node_handle.createTimer(ros::Duration(ros::Rate(poll_freq)), &LivoxRosDriverNodelet::proccessLidarLoop, this);
-
-    return;
+    poll_lidars_ = private_node_handle.createTimer(ros::Duration(ros::Rate(poll_freq)), &LivoxRosDriverNodelet::proccessLidarLoop, this);
   }
 
   void LivoxRosDriverNodelet::proccessLidarLoop(const ros::TimerEvent&)
