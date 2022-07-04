@@ -70,8 +70,6 @@ enable_imu_bag_(imu_bag)
   private_node_ = nullptr;
   bag_ = nullptr;
 
-  ROS_WARN_STREAM(">>> TRANSFER FORMAT: " << transfer_format_);
-
   // Initialise IMU message with constant values
   imu_data_.header.frame_id.assign(imu_frame_id);
 };
