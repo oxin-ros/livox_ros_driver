@@ -66,7 +66,7 @@ class Lddc {
 
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
-  void SetRosNode(ros::NodeHandle *node);
+  void SetRosNodeHandlers(ros::NodeHandle *node, ros::NodeHandle *private_node);
   void SetImuCovariances();
 
   void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
@@ -118,6 +118,7 @@ class Lddc {
   const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
 
   ros::NodeHandle *cur_node_;
+  ros::NodeHandle *private_node_;
   sensor_msgs::Imu imu_data_;
   rosbag::Bag *bag_;
 };
