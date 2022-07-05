@@ -683,7 +683,7 @@ ros::Publisher *Lddc::GetCurrentPublisher(uint8_t handle) {
           name_str, queue_size);
     }
     else {
-      std::runtime_error("Couldn't find a publisher format for Livox Lidar");
+      std::runtime_error("Invalid transfer format for Livox Lidar");
     }
   }
 
