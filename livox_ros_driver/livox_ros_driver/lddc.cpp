@@ -234,9 +234,7 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
         is_zero_packet = 1;
       }
     }
-    if (!published_packet) {
-      cloud.header.stamp = ros::Time::now();
-    }
+    cloud.header.stamp = ros::Time::now();
     uint32_t single_point_num = storage_packet.point_num * echo_num;
 
     if (kSourceLvxFile != data_source) {
@@ -459,11 +457,10 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
     if (!published_packet) {
       livox_msg.timebase = timestamp;
       packet_offset_time = 0;
-      /** convert to ros time stamp */
-      livox_msg.header.stamp = ros::Time::now();
     } else {
       packet_offset_time = (uint32_t)(timestamp - livox_msg.timebase);
     }
+    livox_msg.header.stamp = ros::Time::now();
     uint32_t single_point_num = storage_packet.point_num * echo_num;
 
     if (kSourceLvxFile != data_source) {
@@ -537,10 +534,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   LivoxEthPacket *raw_packet =
       reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
   timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
-  if (timestamp >= 0) {
-    imu_data_.header.stamp =
-        ros::Time::now();  // to ros time stamp
-  }
+  imu_data_.header.stamp = ros::Time::now();  // to ros time stamp
 
   uint8_t point_buf[2048];
   LivoxImuDataProcess(point_buf, raw_packet);
