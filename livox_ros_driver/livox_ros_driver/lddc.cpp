@@ -268,6 +268,7 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
   cloud.is_bigendian = false;
   cloud.is_dense     = true;
   cloud.data.resize(cloud.row_step); /** Adjust to the real size */
+  cloud.header.stamp = ros::Time::now();
 
   sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud); //UFR change- define ptr to pointcloud msg
 
@@ -339,9 +340,11 @@ uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
         is_zero_packet = 1;
       }
     }
-    if (!published_packet) {
-      cloud->header.stamp = timestamp / 1000.0;  // to pcl ros time stamp
-    }
+    // if (!published_packet) {
+    //   cloud->header.stamp = timestamp / 1000.0;  // to pcl ros time stamp
+    // }
+    // Converting ROS time (ns) to PCL time (us) -- Check pcl_conversions API for reference
+    cloud->header.stamp = ros::Time::now().toNSec() / 1000ull;
     uint32_t single_point_num = storage_packet.point_num * echo_num;
 
     if (kSourceLvxFile != data_source) {
