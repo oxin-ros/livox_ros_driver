@@ -538,8 +538,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
       reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
   timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
   if (timestamp >= 0) {
-    imu_data_.header.stamp =
-        ros::Time::now();  // to ros time stamp
+    imu_data_.header.stamp = ros::Time::now();  // to ros time stamp
   }
 
   uint8_t point_buf[2048];
@@ -549,9 +548,9 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   imu_data_.angular_velocity.x = imu->gyro_x;
   imu_data_.angular_velocity.y = imu->gyro_y;
   imu_data_.angular_velocity.z = imu->gyro_z;
-  imu_data_.linear_acceleration.x = imu->acc_x;
-  imu_data_.linear_acceleration.y = imu->acc_y;
-  imu_data_.linear_acceleration.z = imu->acc_z;
+  imu_data_.linear_acceleration.x = imu->acc_x * kGravity_;
+  imu_data_.linear_acceleration.y = imu->acc_y * kGravity_;
+  imu_data_.linear_acceleration.z = imu->acc_z * kGravity_;
 
 
   QueuePopUpdate(queue);
