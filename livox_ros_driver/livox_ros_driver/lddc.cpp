@@ -213,6 +213,7 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
   cloud.data.resize(packet_num * kMaxPointPerEthPacket *
                     sizeof(LivoxPointXyzrtl));
   cloud.point_step = sizeof(LivoxPointXyzrtl);
+  cloud.header.stamp = ros::Time::now();
 
   uint8_t *point_base = cloud.data.data();
   uint8_t data_source = lidar->data_src;
@@ -235,7 +236,6 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
         is_zero_packet = 1;
       }
     }
-    // cloud.header.stamp = ros::Time::now();
     uint32_t single_point_num = storage_packet.point_num * echo_num;
 
     if (kSourceLvxFile != data_source) {
@@ -268,7 +268,6 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
   cloud.is_bigendian = false;
   cloud.is_dense     = true;
   cloud.data.resize(cloud.row_step); /** Adjust to the real size */
-  cloud.header.stamp = ros::Time::now();
 
   sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud); //UFR change- define ptr to pointcloud msg
 
