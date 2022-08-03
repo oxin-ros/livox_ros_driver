@@ -173,8 +173,8 @@ typedef struct {
   uint8_t handle;                    /**< Lidar access handle. */
   uint8_t data_src;                  /**< From raw lidar or livox file. */
   uint8_t raw_data_type;             /**< The data type in eth packaet. */
-  bool data_is_pubulished;           /**< Indicate the data of lidar whether is
-                                          pubulished. */
+  bool data_is_published;           /**< Indicate the data of lidar whether is
+                                          published. */
   uint32_t timestamp_type;           /**< timestamp type of the current eth packet. */
   volatile uint32_t packet_interval; /**< The time interval between packets
                                         of current lidar, unit:ns */
