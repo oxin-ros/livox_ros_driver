@@ -122,7 +122,7 @@ class Lddc {
   sensor_msgs::Imu imu_data_;
   rosbag::Bag *bag_;
 
-  constexpr double kGravity_{ 9.80665 };
+  static constexpr double kGravity_{ 9.80665 };
 };
 
 }  // namespace livox_ros
