@@ -59,7 +59,7 @@ LdsLidar::~LdsLidar() {}
 
 void LdsLidar::ResetLdsLidar(void) { ResetLds(kSourceRawLidar); }
 
-int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs)
+int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs, const TimeSyncRawConfig& timesync_config)
 {
   if (is_initialized_) {
     printf("LiDAR data source is already inited!\n");
@@ -92,7 +92,6 @@ int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs)
         }
       }
     }
-
   }
 
   if (whitelist_count_) {
@@ -106,6 +105,11 @@ int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs)
   } else {
     EnableAutoConnectMode();
     printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
+  }
+
+  if (ParseTimesyncConfig(timesync_config)) {
+    printf("Parse timesync config fail\n");
+    enable_timesync_ = false;
   }
 
   if (enable_timesync_) {
@@ -665,6 +669,42 @@ bool LdsLidar::IsBroadcastCodeExistInWhitelist(const char *broadcast_code) {
   }
 
   return false;
+}
+
+int LdsLidar::ParseTimesyncConfig(const TimeSyncRawConfig& timesync_config)
+{
+  // Store the timesync enable flag.
+  enable_timesync_ = timesync_config.enable_timesync;
+
+  // Store the device name.
+  std::strncpy(
+    timesync_config_.dev_config.name,
+    timesync_config.device_name.c_str(),
+    sizeof(timesync_config_.dev_config.name));
+
+  // Store the device type.
+  timesync_config_.dev_config.type = timesync_config.comm_device_type;
+
+  // If UART.
+  if (timesync_config_.dev_config.type == kCommDevUart) {
+    // Store baudrate.
+    timesync_config_.dev_config.config.uart.baudrate = timesync_config.baudrate_index;
+    // store parity.
+    timesync_config_.dev_config.config.uart.parity = timesync_config.parity_index;
+  }
+
+  if (enable_timesync_) {
+    printf("Enable timesync : \n");
+    if (timesync_config_.dev_config.type == kCommDevUart) {
+      printf("Uart[%s],baudrate index[%d],parity index[%d]\n",
+              timesync_config_.dev_config.name,
+              timesync_config_.dev_config.config.uart.baudrate,
+              timesync_config_.dev_config.config.uart.parity);
+    }
+  } else {
+    printf("Disable timesync\n");
+  }
+  return 0;
 }
 
 int LdsLidar::ParseTimesyncConfig(rapidjson::Document &doc) {

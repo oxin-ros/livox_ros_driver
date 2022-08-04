@@ -60,10 +60,8 @@ class LdsLidar : public Lds {
     return &lds_lidar;
   }
 
-  int InitLdsLidar(std::vector<std::string> &broadcast_code_strs,
-                   const char *user_config_path);
-
-  int InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs);
+  int InitLdsLidar(std::vector<std::string> &broadcast_code_strs, const char *user_config_path);
+  int InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs, const TimeSyncRawConfig& timesync_config);
   int DeInitLdsLidar(void);
 
  private:
@@ -112,6 +110,7 @@ class LdsLidar : public Lds {
   void EnableAutoConnectMode(void) { auto_connect_mode_ = true; }
   void DisableAutoConnectMode(void) { auto_connect_mode_ = false; }
   bool IsAutoConnectMode(void) { return auto_connect_mode_; }
+  int ParseTimesyncConfig(const TimeSyncRawConfig& timesync_config);
   int ParseTimesyncConfig(rapidjson::Document &doc);
   int ParseConfigFile(const char *pathname);
   int AddRawUserConfig(const UserRawConfig& config);

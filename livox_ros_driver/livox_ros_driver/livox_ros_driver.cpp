@@ -69,14 +69,14 @@ bool InitializeRawLidar(std::unique_ptr<Lddc> &lddc, ros::NodeHandle &pnh, const
     int coordinate = 0;
     int imu_rate = 1;
     int extrinsic_parameter_source = 0;
-    pnh.getParam("lidar/broadcast_code", broadcast_code);
-    pnh.getParam("lidar/enable_connect", lidar_config.enable_connect);
-    pnh.getParam("lidar/enable_fan", lidar_config.enable_fan);
-    pnh.getParam("lidar/return_mode", return_mode);
-    pnh.getParam("lidar/coordinate", coordinate);
-    pnh.getParam("lidar/imu_rate", imu_rate);
-    pnh.getParam("lidar/extrinsic_parameter_source", extrinsic_parameter_source);
-    pnh.getParam("lidar/enable_high_sensitivity", lidar_config.enable_high_sensitivity);
+    pnh.getParam("lidar_config/broadcast_code", broadcast_code);
+    pnh.getParam("lidar_config/enable_connect", lidar_config.enable_connect);
+    pnh.getParam("lidar_config/enable_fan", lidar_config.enable_fan);
+    pnh.getParam("lidar_config/return_mode", return_mode);
+    pnh.getParam("lidar_config/coordinate", coordinate);
+    pnh.getParam("lidar_config/imu_rate", imu_rate);
+    pnh.getParam("lidar_config/extrinsic_parameter_source", extrinsic_parameter_source);
+    pnh.getParam("lidar_config/enable_high_sensitivity", lidar_config.enable_high_sensitivity);
 
     strncpy(lidar_config.broadcast_code, broadcast_code.c_str(), 16);
     lidar_config.return_mode = return_mode;
@@ -84,8 +84,16 @@ bool InitializeRawLidar(std::unique_ptr<Lddc> &lddc, ros::NodeHandle &pnh, const
     lidar_config.imu_rate = imu_rate;
     lidar_config.extrinsic_parameter_source = extrinsic_parameter_source;
 
+
+    TimeSyncRawConfig timesync_config;
+    pnh.getParam("timesync_config/enable_timesync", timesync_config.enable_timesync);
+    pnh.getParam("timesync_config/device_name", timesync_config.device_name);
+    pnh.getParam("timesync_config/comm_device_type", timesync_config.comm_device_type);
+    pnh.getParam("timesync_config/baudrate_index", timesync_config.baudrate_index);
+    pnh.getParam("timesync_config/parity_index", timesync_config.parity_index);
+
     // Initialize the lidar.
-    const int lidar_initialization = p_read_lidar->InitLdsLidar({lidar_config});
+    const int lidar_initialization = p_read_lidar->InitLdsLidar({lidar_config}, timesync_config);
     if (SUCCESS != lidar_initialization)
     {
         ROS_ERROR("Initializing Lidar Data source failure. Error code: %i", lidar_initialization);
