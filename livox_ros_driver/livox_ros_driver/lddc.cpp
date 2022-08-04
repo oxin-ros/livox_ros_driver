@@ -233,7 +233,7 @@ namespace livox_ros
             timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
             int64_t packet_gap = timestamp - last_timestamp;
             if ((packet_gap > lidar->packet_interval_max) &&
-                lidar->data_is_pubulished)
+                lidar->data_is_published)
             {
                 // ROS_INFO("Lidar[%d] packet time interval is %ldns", handle,
                 //     packet_gap);
@@ -305,9 +305,9 @@ namespace livox_ros
                             cloud);
             }
         }
-        if (!lidar->data_is_pubulished)
+        if (!lidar->data_is_published)
         {
-            lidar->data_is_pubulished = true;
+            lidar->data_is_published = true;
         }
         return published_packet;
     }
@@ -362,7 +362,7 @@ namespace livox_ros
             timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
             int64_t packet_gap = timestamp - last_timestamp;
             if ((packet_gap > lidar->packet_interval_max) &&
-                lidar->data_is_pubulished)
+                lidar->data_is_published)
             {
                 // ROS_INFO("Lidar[%d] packet time interval is %ldns", handle, packet_gap);
                 if (kSourceLvxFile != data_source)
@@ -428,9 +428,9 @@ namespace livox_ros
                             cloud);
             }
         }
-        if (!lidar->data_is_pubulished)
+        if (!lidar->data_is_published)
         {
-            lidar->data_is_pubulished = true;
+            lidar->data_is_published = true;
         }
         return published_packet;
     }
@@ -501,7 +501,7 @@ namespace livox_ros
             timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
             int64_t packet_gap = timestamp - last_timestamp;
             if ((packet_gap > lidar->packet_interval_max) &&
-                lidar->data_is_pubulished)
+                lidar->data_is_published)
             {
                 // ROS_INFO("Lidar[%d] packet time interval is %ldns", handle,
                 // packet_gap);
@@ -593,9 +593,9 @@ namespace livox_ros
             }
         }
 
-        if (!lidar->data_is_pubulished)
+        if (!lidar->data_is_published)
         {
-            lidar->data_is_pubulished = true;
+            lidar->data_is_published = true;
         }
         return published_packet;
     }
