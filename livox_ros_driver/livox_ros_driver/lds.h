@@ -147,11 +147,11 @@ typedef struct {
 } UserRawConfig;
 
 typedef struct {
-  bool enable_timesync;
+  bool enable_timesync = false;
   std::string device_name;
-  int comm_device_type;
-  int baudrate_index;
-  int parity_index;
+  int comm_device_type = 0;
+  int baudrate_index = 2;
+  int parity_index = 0;
 } TimeSyncRawConfig;
 
 typedef struct {

@@ -59,7 +59,7 @@ LdsLidar::~LdsLidar() {}
 
 void LdsLidar::ResetLdsLidar(void) { ResetLds(kSourceRawLidar); }
 
-int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs, const TimeSyncRawConfig& timesync_config)
+int LdsLidar::InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, const std::optional<TimeSyncRawConfig>& timesync_config)
 {
   if (is_initialized_) {
     printf("LiDAR data source is already inited!\n");
@@ -82,13 +82,13 @@ int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs, cons
   SetBroadcastCallback(OnDeviceBroadcast);
   SetDeviceStateUpdateCallback(OnDeviceChange);
 
-  for (const auto& lidar_config : lidar_configs)
+  if (lidar_config.has_value())
   {
-    if (lidar_config.enable_connect)
+    if (lidar_config->enable_connect)
     {
-      if (!AddBroadcastCodeToWhitelist(lidar_config.broadcast_code)) {
-        if (AddRawUserConfig(lidar_config)) {
-          printf("Raw config is already exist : %s \n", lidar_config.broadcast_code);
+      if (!AddBroadcastCodeToWhitelist(lidar_config->broadcast_code)) {
+        if (AddRawUserConfig(*lidar_config)) {
+          printf("Raw config is already exist : %s \n", lidar_config->broadcast_code);
         }
       }
     }
@@ -107,24 +107,27 @@ int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs, cons
     printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
   }
 
-  if (ParseTimesyncConfig(timesync_config)) {
-    printf("Parse timesync config fail\n");
-    enable_timesync_ = false;
-  }
-
-  if (enable_timesync_) {
-    timesync_ = TimeSync::GetInstance();
-    if (timesync_->InitTimeSync(timesync_config_)) {
-      printf("Timesync init fail\n");
-      return -1;
+  if (timesync_config.has_value())
+  {
+    if (ParseTimesyncConfig(*timesync_config)) {
+      printf("Parse timesync config fail\n");
+      enable_timesync_ = false;
     }
 
-    if (timesync_->SetReceiveSyncTimeCb(ReceiveSyncTimeCallback, this)) {
-      printf("Set Timesync callback fail\n");
-      return -1;
-    }
+    if (enable_timesync_) {
+      timesync_ = TimeSync::GetInstance();
+      if (timesync_->InitTimeSync(timesync_config_)) {
+        printf("Timesync init fail\n");
+        return -1;
+      }
 
-    timesync_->StartTimesync();
+      if (timesync_->SetReceiveSyncTimeCb(ReceiveSyncTimeCallback, this)) {
+        printf("Set Timesync callback fail\n");
+        return -1;
+      }
+
+      timesync_->StartTimesync();
+    }
   }
 
   /** Start livox sdk to receive lidar data */

@@ -27,6 +27,7 @@
 #include <chrono>
 #include <vector>
 #include <csignal>
+#include <optional>
 
 #include <ros/ros.h>
 #include "lddc.h"
@@ -46,23 +47,14 @@ inline void SignalHandler(int signum)
     exit(signum);
 }
 
-bool InitializeRawLidar(std::unique_ptr<Lddc> &lddc, ros::NodeHandle &pnh, const double publish_freq)
+std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
 {
-    ROS_INFO("Data Source is raw lidar.");
-
-    // Get the Lidar data source.
-    LdsLidar* p_read_lidar = LdsLidar::GetInstance(1000 / publish_freq);
-
-    // Register the Lidar data source with the lidar data distributor.
-    constexpr int SUCCESS = 0;
-    const int registered_lidar_data_source = lddc->RegisterLds(static_cast<Lds *>(p_read_lidar));
-    if (SUCCESS != registered_lidar_data_source)
+    const bool lidar_config_available = pnh.hasParam("lidar_config");
+    if (!lidar_config_available)
     {
-        ROS_ERROR("Register lidar data distributor failure.");
-        return false;
+        return std::nullopt;
     }
 
-    // Get the lidar config from ROS.
     UserRawConfig lidar_config;
     std::string broadcast_code;
     int return_mode = 0;
@@ -84,6 +76,16 @@ bool InitializeRawLidar(std::unique_ptr<Lddc> &lddc, ros::NodeHandle &pnh, const
     lidar_config.imu_rate = imu_rate;
     lidar_config.extrinsic_parameter_source = extrinsic_parameter_source;
 
+    return lidar_config;
+}
+
+std::optional<TimeSyncRawConfig> GetTimesyncConfig(ros::NodeHandle& pnh)
+{
+    const bool timesync_config_available = pnh.hasParam("timesync_config");
+    if (!timesync_config_available)
+    {
+        return std::nullopt;
+    }
 
     TimeSyncRawConfig timesync_config;
     pnh.getParam("timesync_config/enable_timesync", timesync_config.enable_timesync);
@@ -91,9 +93,33 @@ bool InitializeRawLidar(std::unique_ptr<Lddc> &lddc, ros::NodeHandle &pnh, const
     pnh.getParam("timesync_config/comm_device_type", timesync_config.comm_device_type);
     pnh.getParam("timesync_config/baudrate_index", timesync_config.baudrate_index);
     pnh.getParam("timesync_config/parity_index", timesync_config.parity_index);
+    return timesync_config;
+}
+
+bool InitializeRawLidar(std::unique_ptr<Lddc> &lddc, ros::NodeHandle &pnh, const double publish_freq)
+{
+    ROS_INFO("Data Source is raw lidar.");
+
+    // Get the Lidar data source.
+    LdsLidar* p_read_lidar = LdsLidar::GetInstance(1000 / publish_freq);
+
+    // Register the Lidar data source with the lidar data distributor.
+    constexpr int SUCCESS = 0;
+    const int registered_lidar_data_source = lddc->RegisterLds(static_cast<Lds *>(p_read_lidar));
+    if (SUCCESS != registered_lidar_data_source)
+    {
+        ROS_ERROR("Register lidar data distributor failure.");
+        return false;
+    }
+
+    // Get the lidar config from ROS.
+    const auto lidar_config = GetLidarConfig(pnh);
+
+    // Get the timesync config from ROS.
+    const auto timesync_config = GetTimesyncConfig(pnh);
 
     // Initialize the lidar.
-    const int lidar_initialization = p_read_lidar->InitLdsLidar({lidar_config}, timesync_config);
+    const int lidar_initialization = p_read_lidar->InitLdsLidar(lidar_config, timesync_config);
     if (SUCCESS != lidar_initialization)
     {
         ROS_ERROR("Initializing Lidar Data source failure. Error code: %i", lidar_initialization);

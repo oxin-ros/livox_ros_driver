@@ -30,6 +30,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <optional>
 
 #include "lds.h"
 #include "livox_sdk.h"
@@ -61,7 +62,7 @@ class LdsLidar : public Lds {
   }
 
   int InitLdsLidar(std::vector<std::string> &broadcast_code_strs, const char *user_config_path);
-  int InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs, const TimeSyncRawConfig& timesync_config);
+  int InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, const std::optional<TimeSyncRawConfig>& timesync_config);
   int DeInitLdsLidar(void);
 
  private:
