@@ -169,6 +169,7 @@ namespace livox_ros
     void Lddc::InitPointcloud2MsgHeader(sensor_msgs::PointCloud2 &cloud)
     {
         cloud.header.frame_id.assign(config_.lidar_frame_id);
+        cloud.header.stamp = ros::Time::now();
         cloud.height = 1;
         cloud.width = 0;
         cloud.fields.resize(6);
@@ -290,11 +291,12 @@ namespace livox_ros
         cloud.is_dense = true;
         cloud.data.resize(cloud.row_step); /** Adjust to the real size */
 
-        sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud); // UFR change- define ptr to pointcloud msg
 
         ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
         if (kOutputToRos == config_.output_type)
         {
+            // UFR change- define ptr to pointcloud msg
+            const sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud);
             p_publisher->publish(msg_cloudPtr); // UFR change
         }
         else
@@ -346,6 +348,8 @@ namespace livox_ros
 
         boost::shared_ptr<PointCloud> cloud(new PointCloud);
         cloud->header.frame_id.assign(config_.lidar_frame_id);
+        // Converting ROS time (ns) to PCL time (us) -- Check pcl_conversions API for reference
+        cloud->header.stamp = ros::Time::now().toNSec() / 1000ull;
         cloud->height = 1;
         cloud->width = 0;
 
@@ -479,6 +483,7 @@ namespace livox_ros
 
         livox_ros_driver::CustomMsg livox_msg;
         livox_msg.header.frame_id.assign(config_.lidar_frame_id);
+        livox_msg.header.stamp = ros::Time::now();
         livox_msg.header.seq = msg_seq;
         ++msg_seq;
         livox_msg.timebase = 0;
@@ -513,7 +518,8 @@ namespace livox_ros
                 }
             }
             /** first packet */
-            if (!published_packet)
+            const bool is_first_packet = (published_packet == 0);
+            if (is_first_packet)
             {
                 livox_msg.timebase = timestamp;
                 packet_offset_time = 0;
@@ -612,10 +618,7 @@ namespace livox_ros
         LivoxEthPacket *raw_packet =
             reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
         timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
-        if (timestamp >= 0)
-        {
-            imu_data_.header.stamp = ros::Time::now(); // to ros time stamp
-        }
+        imu_data_.header.stamp = ros::Time::now(); // to ros time stamp
 
         uint8_t point_buf[2048];
         LivoxImuDataProcess(point_buf, raw_packet);
