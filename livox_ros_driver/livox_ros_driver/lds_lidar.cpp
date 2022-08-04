@@ -59,6 +59,87 @@ LdsLidar::~LdsLidar() {}
 
 void LdsLidar::ResetLdsLidar(void) { ResetLds(kSourceRawLidar); }
 
+int LdsLidar::InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs)
+{
+  if (is_initialized_) {
+    printf("LiDAR data source is already inited!\n");
+    return -1;
+  }
+
+  if (!Init()) {
+    Uninit();
+    printf("Livox-SDK init fail!\n");
+    return -1;
+  }
+
+  LivoxSdkVersion _sdkversion;
+  GetLivoxSdkVersion(&_sdkversion);
+  printf("Livox SDK version %d.%d.%d\n",
+    _sdkversion.major,
+    _sdkversion.minor,
+    _sdkversion.patch);
+
+  SetBroadcastCallback(OnDeviceBroadcast);
+  SetDeviceStateUpdateCallback(OnDeviceChange);
+
+  for (const auto& lidar_config : lidar_configs)
+  {
+    if (lidar_config.enable_connect)
+    {
+      if (!AddBroadcastCodeToWhitelist(lidar_config.broadcast_code)) {
+        if (AddRawUserConfig(lidar_config)) {
+          printf("Raw config is already exist : %s \n", lidar_config.broadcast_code);
+        }
+      }
+    }
+
+  }
+
+  if (whitelist_count_) {
+    DisableAutoConnectMode();
+    printf("Disable auto connect mode!\n");
+
+    printf("List all broadcast code in whiltelist:\n");
+    for (uint32_t i = 0; i < whitelist_count_; i++) {
+      printf("%s\n", broadcast_code_whitelist_[i]);
+    }
+  } else {
+    EnableAutoConnectMode();
+    printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
+  }
+
+  if (enable_timesync_) {
+    timesync_ = TimeSync::GetInstance();
+    if (timesync_->InitTimeSync(timesync_config_)) {
+      printf("Timesync init fail\n");
+      return -1;
+    }
+
+    if (timesync_->SetReceiveSyncTimeCb(ReceiveSyncTimeCallback, this)) {
+      printf("Set Timesync callback fail\n");
+      return -1;
+    }
+
+    timesync_->StartTimesync();
+  }
+
+  /** Start livox sdk to receive lidar data */
+  if (!Start()) {
+    Uninit();
+    printf("Livox-SDK init fail!\n");
+    return -1;
+  }
+
+  /** Add here, only for callback use */
+  if (g_lds_ldiar == nullptr) {
+    g_lds_ldiar = this;
+  }
+  is_initialized_ = true;
+  printf("Livox-SDK init success!\n");
+
+  return 0;
+}
+
 int LdsLidar::InitLdsLidar(std::vector<std::string> &broadcast_code_strs,
                            const char *user_config_path) {
   if (is_initialized_) {
@@ -74,8 +155,10 @@ int LdsLidar::InitLdsLidar(std::vector<std::string> &broadcast_code_strs,
 
   LivoxSdkVersion _sdkversion;
   GetLivoxSdkVersion(&_sdkversion);
-  printf("Livox SDK version %d.%d.%d\n", _sdkversion.major, _sdkversion.minor,
-         _sdkversion.patch);
+  printf("Livox SDK version %d.%d.%d\n",
+    _sdkversion.major,
+    _sdkversion.minor,
+    _sdkversion.patch);
 
   SetBroadcastCallback(OnDeviceBroadcast);
   SetDeviceStateUpdateCallback(OnDeviceChange);
@@ -97,9 +180,7 @@ int LdsLidar::InitLdsLidar(std::vector<std::string> &broadcast_code_strs,
     }
   } else {
     EnableAutoConnectMode();
-    printf(
-        "No broadcast code was added to whitelist, swith to automatic "
-        "connection mode!\n");
+    printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
   }
 
   if (enable_timesync_) {
@@ -730,7 +811,7 @@ int LdsLidar::ParseConfigFile(const char *pathname) {
   return 0;
 }
 
-int LdsLidar::AddRawUserConfig(UserRawConfig &config) {
+int LdsLidar::AddRawUserConfig(const UserRawConfig& config) {
   if (IsExistInRawConfig(config.broadcast_code)) {
     return -1;
   }

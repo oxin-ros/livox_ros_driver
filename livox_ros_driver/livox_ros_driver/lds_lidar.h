@@ -38,6 +38,18 @@
 
 namespace livox_ros {
 
+struct LdsLidarConfig
+{
+  std::string broadcast_code;
+  bool enable_connect;
+  bool enable_fan;
+  int return_mode;
+  int coordinate;
+  int imu_rate;
+  int extrinsic_parameter_source;
+  bool enable_high_sensitivity;
+};
+
 /**
  * LiDAR data source, data from dependent lidar.
  */
@@ -50,6 +62,8 @@ class LdsLidar : public Lds {
 
   int InitLdsLidar(std::vector<std::string> &broadcast_code_strs,
                    const char *user_config_path);
+
+  int InitLdsLidar(const std::vector<UserRawConfig>& lidar_configs);
   int DeInitLdsLidar(void);
 
  private:
@@ -100,7 +114,7 @@ class LdsLidar : public Lds {
   bool IsAutoConnectMode(void) { return auto_connect_mode_; }
   int ParseTimesyncConfig(rapidjson::Document &doc);
   int ParseConfigFile(const char *pathname);
-  int AddRawUserConfig(UserRawConfig &config);
+  int AddRawUserConfig(const UserRawConfig& config);
   bool IsExistInRawConfig(const char *broadcast_code);
   int GetRawConfig(const char *broadcast_code, UserRawConfig &config);
 

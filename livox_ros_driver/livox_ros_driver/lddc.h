@@ -34,96 +34,96 @@
 #include <livox_ros_driver/CustomMsg.h>
 #include <livox_ros_driver/CustomPoint.h>
 
-namespace livox_ros {
+namespace livox_ros
+{
 
-typedef pcl::PointCloud<pcl::PointXYZI> PointCloud;
+    typedef pcl::PointCloud<pcl::PointXYZI> PointCloud;
 
-/** Lidar data distribute control */
-typedef enum {
-  kPointCloud2Msg = 0,
-  kLivoxCustomMsg = 1,
-  kPclPxyziMsg
-} TransferType;
+    /** Lidar data distribute control */
+    typedef enum
+    {
+        kPointCloud2Msg = 0,
+        kLivoxCustomMsg = 1,
+        kPclPxyziMsg
+    } TransferType;
 
-class Lddc {
- public:
-  Lddc(
-    const int format,
-    const int multi_topic,
-    const int data_src,
-    const int output_type,
-    double frq,
-    const std::string& lidar_frame_id,
-    const std::string& imu_frame_id,
-    const bool lidar_bag,
-    const bool imu_bag);
-  ~Lddc();
+    struct Lddc_config
+    {
+        int format;
+        int multi_topic;
+        int data_src;
+        int output_type;
+        double frequency;
+        std::string lidar_frame_id;
+        std::string imu_frame_id;
+        bool lidar_bag;
+        bool imu_bag;
+    };
 
-  int RegisterLds(Lds *lds);
-  void DistributeLidarData(void);
-  void CreateBagFile(const std::string &file_name);
-  void PrepareExit(void);
+    class Lddc
+    {
+    public:
+        Lddc(const Lddc_config &lddc_config);
+        ~Lddc();
 
-  uint8_t GetTransferFormat(void) { return transfer_format_; }
-  uint8_t IsMultiTopic(void) { return use_multi_topic_; }
-  void SetRosNodeHandlers(ros::NodeHandle *node, ros::NodeHandle *private_node);
-  void SetImuCovariances();
+        int RegisterLds(Lds *lds);
+        void DistributeLidarData(void);
+        void CreateBagFile(const std::string &file_name);
+        void PrepareExit(void);
 
-  void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
-  void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
+        uint8_t GetTransferFormat(void) { return config_.format; }
+        uint8_t IsMultiTopic(void) { return config_.multi_topic; }
+        void SetRosNodeHandlers(ros::NodeHandle *node, ros::NodeHandle *private_node);
+        void SetImuCovariances();
 
-  Lds *lds_;
+        void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
 
- private:
-  int32_t GetPublishStartTime(LidarDevice *lidar, LidarDataQueue *queue,
-                              uint64_t *start_time,
-                              StoragePacket *storage_packet);
-  uint32_t PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
-                              uint8_t handle);
-  uint32_t PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
-                                 uint8_t handle);
-  uint32_t PublishCustomPointcloud(LidarDataQueue *queue, uint32_t packet_num,
-                                   uint8_t handle);
-  uint32_t PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
-                          uint8_t handle);
+        Lds *lds_;
 
-  ros::Publisher *GetCurrentPublisher(uint8_t handle);
-  ros::Publisher *GetCurrentImuPublisher(uint8_t handle);
-  void PollingLidarPointCloudData(uint8_t handle, LidarDevice *lidar);
-  void PollingLidarImuData(uint8_t handle, LidarDevice *lidar);
-  void InitPointcloud2MsgHeader(sensor_msgs::PointCloud2& cloud);
-  void FillPointsToPclMsg(boost::shared_ptr<PointCloud>& pcl_msg, \
-      LivoxPointXyzrtl* src_point, uint32_t num);
-  void FillPointsToCustomMsg(livox_ros_driver::CustomMsg& livox_msg, \
-      LivoxPointXyzrtl* src_point, uint32_t num, uint32_t offset_time, \
-      uint32_t point_interval, uint32_t echo_num);
-  uint8_t transfer_format_;
-  uint8_t use_multi_topic_;
-  uint8_t data_src_;
-  uint8_t output_type_;
-  double publish_frq_;
-  uint32_t publish_period_ns_;
-  std::string lidar_frame_id_;
-  bool enable_lidar_bag_;
-  bool enable_imu_bag_;
-  ros::Publisher *private_pub_[kMaxSourceLidar];
-  ros::Publisher *global_pub_;
-  ros::Publisher *private_imu_pub_[kMaxSourceLidar];
-  ros::Publisher *global_imu_pub_;
+    private:
+        int32_t GetPublishStartTime(LidarDevice *lidar, LidarDataQueue *queue,
+                                    uint64_t *start_time,
+                                    StoragePacket *storage_packet);
+        uint32_t PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
+                                    uint8_t handle);
+        uint32_t PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
+                                       uint8_t handle);
+        uint32_t PublishCustomPointcloud(LidarDataQueue *queue, uint32_t packet_num,
+                                         uint8_t handle);
+        uint32_t PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
+                                uint8_t handle);
 
-  // Covariances
-  std::vector<double> angular_velocity_cov_;
-  std::vector<double> linear_acceleration_cov_;
-  const std::vector<double> kDefaultAngularVelocityCov_{9, 0.0};
-  const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
+        ros::Publisher *GetCurrentPublisher(uint8_t handle);
+        ros::Publisher *GetCurrentImuPublisher(uint8_t handle);
+        void PollingLidarPointCloudData(uint8_t handle, LidarDevice *lidar);
+        void PollingLidarImuData(uint8_t handle, LidarDevice *lidar);
+        void InitPointcloud2MsgHeader(sensor_msgs::PointCloud2 &cloud);
+        void FillPointsToPclMsg(boost::shared_ptr<PointCloud> &pcl_msg,
+                                LivoxPointXyzrtl *src_point, uint32_t num);
+        void FillPointsToCustomMsg(livox_ros_driver::CustomMsg &livox_msg,
+                                   LivoxPointXyzrtl *src_point, uint32_t num, uint32_t offset_time,
+                                   uint32_t point_interval, uint32_t echo_num);
 
-  ros::NodeHandle *cur_node_;
-  ros::NodeHandle *private_node_;
-  sensor_msgs::Imu imu_data_;
-  rosbag::Bag *bag_;
+        Lddc_config config_;
+        uint32_t publish_period_ns_;
+        ros::Publisher *private_pub_[kMaxSourceLidar];
+        ros::Publisher *global_pub_;
+        ros::Publisher *private_imu_pub_[kMaxSourceLidar];
+        ros::Publisher *global_imu_pub_;
 
-  static constexpr double kGravity_{ 9.80665 };
-};
+        // Covariances
+        std::vector<double> angular_velocity_cov_;
+        std::vector<double> linear_acceleration_cov_;
+        const std::vector<double> kDefaultAngularVelocityCov_{9, 0.0};
+        const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
 
-}  // namespace livox_ros
+        ros::NodeHandle *cur_node_;
+        ros::NodeHandle *private_node_;
+        sensor_msgs::Imu imu_data_;
+        rosbag::Bag *bag_;
+
+        static constexpr double kGravity_{9.80665};
+    };
+
+} // namespace livox_ros
 #endif
