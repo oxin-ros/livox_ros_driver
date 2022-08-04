@@ -61,14 +61,15 @@ std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
     int coordinate = 0;
     int imu_rate = 1;
     int extrinsic_parameter_source = 0;
-    pnh.getParam("lidar_config/broadcast_code", broadcast_code);
-    pnh.getParam("lidar_config/enable_connect", lidar_config.enable_connect);
-    pnh.getParam("lidar_config/enable_fan", lidar_config.enable_fan);
-    pnh.getParam("lidar_config/return_mode", return_mode);
-    pnh.getParam("lidar_config/coordinate", coordinate);
-    pnh.getParam("lidar_config/imu_rate", imu_rate);
-    pnh.getParam("lidar_config/extrinsic_parameter_source", extrinsic_parameter_source);
-    pnh.getParam("lidar_config/enable_high_sensitivity", lidar_config.enable_high_sensitivity);
+    ros::NodeHandle config_nh(pnh, "lidar_config");
+    config_nh.getParam("broadcast_code", broadcast_code);
+    config_nh.getParam("enable_connect", lidar_config.enable_connect);
+    config_nh.getParam("enable_fan", lidar_config.enable_fan);
+    config_nh.getParam("return_mode", return_mode);
+    config_nh.getParam("coordinate", coordinate);
+    config_nh.getParam("imu_rate", imu_rate);
+    config_nh.getParam("extrinsic_parameter_source", extrinsic_parameter_source);
+    config_nh.getParam("enable_high_sensitivity", lidar_config.enable_high_sensitivity);
 
     strncpy(lidar_config.broadcast_code, broadcast_code.c_str(), 16);
     lidar_config.return_mode = return_mode;
@@ -88,11 +89,12 @@ std::optional<TimeSyncRawConfig> GetTimesyncConfig(ros::NodeHandle& pnh)
     }
 
     TimeSyncRawConfig timesync_config;
-    pnh.getParam("timesync_config/enable_timesync", timesync_config.enable_timesync);
-    pnh.getParam("timesync_config/device_name", timesync_config.device_name);
-    pnh.getParam("timesync_config/comm_device_type", timesync_config.comm_device_type);
-    pnh.getParam("timesync_config/baudrate_index", timesync_config.baudrate_index);
-    pnh.getParam("timesync_config/parity_index", timesync_config.parity_index);
+    ros::NodeHandle config_nh(pnh, "lidar_config");
+    config_nh.getParam("enable_timesync", timesync_config.enable_timesync);
+    config_nh.getParam("device_name", timesync_config.device_name);
+    config_nh.getParam("comm_device_type", timesync_config.comm_device_type);
+    config_nh.getParam("baudrate_index", timesync_config.baudrate_index);
+    config_nh.getParam("parity_index", timesync_config.parity_index);
     return timesync_config;
 }
 
