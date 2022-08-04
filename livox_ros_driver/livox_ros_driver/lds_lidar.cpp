@@ -82,8 +82,10 @@ int LdsLidar::InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, con
   SetBroadcastCallback(OnDeviceBroadcast);
   SetDeviceStateUpdateCallback(OnDeviceChange);
 
+  // Check if the device config is present.
   if (lidar_config.has_value())
   {
+    // Add the device to the whitelist.
     if (lidar_config->enable_connect)
     {
       if (!AddBroadcastCodeToWhitelist(lidar_config->broadcast_code)) {
@@ -107,6 +109,7 @@ int LdsLidar::InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, con
     printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
   }
 
+  // Check if the timesync config is present.
   if (timesync_config.has_value())
   {
     if (ParseTimesyncConfig(*timesync_config)) {
