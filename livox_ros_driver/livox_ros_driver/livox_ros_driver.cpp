@@ -24,6 +24,7 @@
 
 #include "include/livox_ros_driver.h"
 
+#include <algorithm>
 #include <chrono>
 #include <vector>
 #include <csignal>
@@ -49,12 +50,14 @@ inline void SignalHandler(int signum)
 
 std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
 {
+    // Check whether the lidar config is available.
     const bool lidar_config_available = pnh.hasParam("lidar_config");
     if (!lidar_config_available)
     {
         return std::nullopt;
     }
 
+    // Pull the config from the ROS param server.
     UserRawConfig lidar_config;
     std::string broadcast_code;
     int return_mode = 0;
@@ -71,7 +74,32 @@ std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
     config_nh.getParam("extrinsic_parameter_source", extrinsic_parameter_source);
     config_nh.getParam("enable_high_sensitivity", lidar_config.enable_high_sensitivity);
 
-    strncpy(lidar_config.broadcast_code, broadcast_code.c_str(), 16);
+    // VALIDATE THE BROADCAST CODE.
+    // The Livox LiDAR broadcast code consists of 15 characters, with a 14-character
+    // serial number plus a character-length additional code.
+
+    // Check if the supplied broadcast code is the correct length.
+    constexpr size_t BROADCAST_CODE_LENGTH = 15;
+    const bool valid_broadcast_code_length = (BROADCAST_CODE_LENGTH == broadcast_code.size());
+    if (!valid_broadcast_code_length)
+    {
+        // Incorrect broadcast code length.
+        return std::nullopt;
+    }
+
+    // Check if the supplied broadcast code is the correct format (i.e. alphanumeric).
+    const bool broadcast_code_is_alphanumeric = std::all_of(
+        broadcast_code.cbegin(),
+        broadcast_code.cend(),
+        [](const char& c) -> bool { return isalnum(c); });
+    if (!broadcast_code_is_alphanumeric)
+    {
+        // Incorrect broadcast code format.
+        return std::nullopt;
+    }
+
+    // Copy the ros parameters to the config.
+    strncpy(lidar_config.broadcast_code, broadcast_code.c_str(), BROADCAST_CODE_LENGTH);
     lidar_config.return_mode = return_mode;
     lidar_config.coordinate = coordinate;
     lidar_config.imu_rate = imu_rate;
@@ -82,12 +110,14 @@ std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
 
 std::optional<TimeSyncRawConfig> GetTimesyncConfig(ros::NodeHandle& pnh)
 {
+    // Check whether the timesync config is available.
     const bool timesync_config_available = pnh.hasParam("timesync_config");
     if (!timesync_config_available)
     {
         return std::nullopt;
     }
 
+    // Pull the config from the ROS param server.
     TimeSyncRawConfig timesync_config;
     ros::NodeHandle config_nh(pnh, "lidar_config");
     config_nh.getParam("enable_timesync", timesync_config.enable_timesync);
