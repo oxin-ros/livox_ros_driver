@@ -57,6 +57,14 @@ std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
         return std::nullopt;
     }
 
+    // Check whether the broadcast code is specified.
+    ros::NodeHandle config_nh(pnh, "lidar_config");
+    if (!config_nh.hasParam("broadcast_code"))
+    {
+        // No broadcast code, use automatic connection mode.
+        return std::nullopt;
+    }
+
     // Pull the config from the ROS param server.
     UserRawConfig lidar_config;
     std::string broadcast_code;
@@ -64,7 +72,6 @@ std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& pnh)
     int coordinate = 0;
     int imu_rate = 1;
     int extrinsic_parameter_source = 0;
-    ros::NodeHandle config_nh(pnh, "lidar_config");
     config_nh.getParam("broadcast_code", broadcast_code);
     config_nh.getParam("enable_connect", lidar_config.enable_connect);
     config_nh.getParam("enable_fan", lidar_config.enable_fan);
