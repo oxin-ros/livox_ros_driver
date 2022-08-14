@@ -3,8 +3,6 @@ CMakeLists.txt
 livox_ros_driver/Livox-SDK
 #whitelist
 
-.vscode
-
 .catkin_tools
 build
 devel

@@ -24,7 +24,9 @@ RUN apt-get update \
 # Install APT depenencies
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes \
+        build-essential \
         cmake \
+        gdb \
         python-catkin-tools \
         python-rosdep \
         python-rosinstall \
@@ -53,10 +55,11 @@ USER $USERNAME
 WORKDIR /tmp
 ARG LIVOX_SDK_BRANCH=master
 ENV LIVOX_SDK_BRANCH ${LIVOX_SDK_BRANCH}
+ARG LIVOX_SDK_BUILD_TYPE=Release
 RUN git clone -b ${LIVOX_SDK_BRANCH} https://github.com/oxin-ros/Livox-SDK.git src/livox-sdk \
     && . /opt/ros/${ROS_DISTRO}/setup.sh \
     && catkin_make \
-        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=${LIVOX_SDK_BUILD_TYPE} \
         -DCMAKE_INSTALL_PREFIX=/opt/ros/${ROS_DISTRO} \
     && cd build \
     && sudo make install \
