@@ -593,7 +593,7 @@ void Lds::ResetLidar(LidarDevice *lidar, uint8_t data_src) {
   /** unallocated state */
   lidar->handle = kMaxSourceLidar;
   lidar->data_src = data_src;
-  lidar->data_is_pubulished = false;
+  lidar->data_is_published = false;
   lidar->connect_state = kConnectStateOff;
   lidar->raw_data_type = 0xFF;
 }
