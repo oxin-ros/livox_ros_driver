@@ -62,9 +62,9 @@ Lddc::Lddc(
 {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
-  bag_ = nullptr;
   global_pub_ = {};
   global_imu_pub_ = {};
+  bag_ = nullptr;
 
   // Initialise IMU message with constant values
   imu_data_.header.frame_id.assign(imu_frame_id);
