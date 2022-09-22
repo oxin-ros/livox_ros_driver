@@ -98,7 +98,7 @@ namespace livox_ros
       imu_frame_id,
       lidar_bag,
       imu_bag);
-    lddc_->SetRosNodeHandlers(&node_handle, &private_node_handle);
+    lddc_->SetRosNodeHandlers(node_handle, private_node_handle);
     lddc_->SetImuCovariances();
 
     int ret = 0;

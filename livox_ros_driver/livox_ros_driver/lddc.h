@@ -57,7 +57,7 @@ class Lddc {
     const std::string& imu_frame_id,
     const bool lidar_bag,
     const bool imu_bag);
-  ~Lddc();
+  ~Lddc() = default;
 
   int RegisterLds(Lds *lds);
   void DistributeLidarData(void);
@@ -66,10 +66,10 @@ class Lddc {
 
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
-  void SetRosNodeHandlers(ros::NodeHandle *node, ros::NodeHandle *private_node);
+  void SetRosNodeHandlers(ros::NodeHandle &node, ros::NodeHandle &private_node);
   void SetImuCovariances();
 
-  void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
+  void SetRosPub(std::shared_ptr<ros::Publisher> &pub) { global_pub_ = pub; };
   void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
 
   Lds *lds_;
@@ -87,8 +87,8 @@ class Lddc {
   uint32_t PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
                           uint8_t handle);
 
-  ros::Publisher *GetCurrentPublisher(uint8_t handle);
-  ros::Publisher *GetCurrentImuPublisher(uint8_t handle);
+  std::shared_ptr<ros::Publisher> GetCurrentPublisher(uint8_t handle);
+  std::shared_ptr<ros::Publisher> GetCurrentImuPublisher(uint8_t handle);
   void PollingLidarPointCloudData(uint8_t handle, LidarDevice *lidar);
   void PollingLidarImuData(uint8_t handle, LidarDevice *lidar);
   void InitPointcloud2MsgHeader(sensor_msgs::PointCloud2& cloud);
@@ -106,10 +106,10 @@ class Lddc {
   std::string lidar_frame_id_;
   bool enable_lidar_bag_;
   bool enable_imu_bag_;
-  ros::Publisher *private_pub_[kMaxSourceLidar];
-  ros::Publisher *global_pub_;
-  ros::Publisher *private_imu_pub_[kMaxSourceLidar];
-  ros::Publisher *global_imu_pub_;
+  std::shared_ptr<ros::Publisher> private_pub_[kMaxSourceLidar];
+  std::shared_ptr<ros::Publisher> global_pub_;
+  std::shared_ptr<ros::Publisher> private_imu_pub_[kMaxSourceLidar];
+  std::shared_ptr<ros::Publisher> global_imu_pub_;
 
   // Covariances
   std::vector<double> angular_velocity_cov_;
@@ -117,8 +117,8 @@ class Lddc {
   const std::vector<double> kDefaultAngularVelocityCov_{9, 0.0};
   const std::vector<double> kDefaultLinearAccelerationCov_{9, 0.0};
 
-  ros::NodeHandle *cur_node_;
-  ros::NodeHandle *private_node_;
+  ros::NodeHandle cur_node_;
+  ros::NodeHandle private_node_;
   sensor_msgs::Imu imu_data_;
   rosbag::Bag *bag_;
 

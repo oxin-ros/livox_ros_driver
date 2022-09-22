@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
       imu_frame_id,
       lidar_bag,
       imu_bag);
-  lddc->SetRosNodeHandlers(&livox_node, &private_node_handle);
+  lddc->SetRosNodeHandlers(livox_node, private_node_handle);
   lddc->SetImuCovariances();
 
   int ret = 0;

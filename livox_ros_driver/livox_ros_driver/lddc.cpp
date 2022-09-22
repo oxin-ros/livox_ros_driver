@@ -50,65 +50,35 @@ Lddc::Lddc(
   const std::string& lidar_frame_id,
   const std::string& imu_frame_id,
   const bool lidar_bag,
-  const bool imu_bag):
-transfer_format_(format),
-use_multi_topic_(multi_topic),
-data_src_(data_src),
-output_type_(output_type),
-publish_frq_(frq),
-lidar_frame_id_(lidar_frame_id),
-enable_lidar_bag_(lidar_bag),
-enable_imu_bag_(imu_bag)
+  const bool imu_bag)
+: transfer_format_(format)
+, use_multi_topic_(multi_topic)
+, data_src_(data_src)
+, output_type_(output_type)
+, publish_frq_(frq)
+, lidar_frame_id_(lidar_frame_id)
+, enable_lidar_bag_(lidar_bag)
+, enable_imu_bag_(imu_bag)
 {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
-  memset(private_pub_, 0, sizeof(private_pub_));
-  memset(private_imu_pub_, 0, sizeof(private_imu_pub_));
   global_pub_ = nullptr;
   global_imu_pub_ = nullptr;
-  cur_node_ = nullptr;
-  private_node_ = nullptr;
   bag_ = nullptr;
 
   // Initialise IMU message with constant values
   imu_data_.header.frame_id.assign(imu_frame_id);
 };
 
-Lddc::~Lddc() {
-  if (global_pub_) {
-    delete global_pub_;
-  }
-
-  if (global_imu_pub_) {
-    delete global_imu_pub_;
-  }
-
-  if (lds_) {
-    lds_->PrepareExit();
-  }
-
-  for (uint32_t i = 0; i < kMaxSourceLidar; i++) {
-    if (private_pub_[i]) {
-      delete private_pub_[i];
-    }
-  }
-
-  for (uint32_t i = 0; i < kMaxSourceLidar; i++) {
-    if (private_imu_pub_[i]) {
-      delete private_imu_pub_[i];
-    }
-  }
-}
-
-void Lddc::SetRosNodeHandlers(ros::NodeHandle *node, ros::NodeHandle *private_node) {
+void Lddc::SetRosNodeHandlers(ros::NodeHandle &node, ros::NodeHandle &private_node) {
   cur_node_ = node;
   private_node_ = private_node;
 }
 
 void Lddc::SetImuCovariances() {
   // Fill in covariance matrices
-  private_node_->param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
-  private_node_->param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
+  private_node_.param("angular_velocity_cov", angular_velocity_cov_, kDefaultAngularVelocityCov_);
+  private_node_.param("linear_acceleration_cov", linear_acceleration_cov_, kDefaultLinearAccelerationCov_);
 
   // Given that the IMU doesn't produce an orientation estimate,
   // the element 0 of the associated covariance matrix is -1
@@ -269,7 +239,7 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
   cloud.data.resize(cloud.row_step); /** Adjust to the real size */
 
 
-  ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
+  std::shared_ptr<ros::Publisher> p_publisher = Lddc::GetCurrentPublisher(handle);
   if (kOutputToRos == output_type_) {
     // UFR change- define ptr to pointcloud msg
     const sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud);
@@ -310,7 +280,7 @@ uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
   StoragePacket storage_packet;
   LidarDevice *lidar = &lds_->lidars_[handle];
   if (GetPublishStartTime(lidar, queue, &last_timestamp, &storage_packet)) {
-    /* the remaning packets in queue maybe not enough after skip */
+    ROS_DEBUG("The remaining packets in the queue maybe not enough after skip");
     return 0;
   }
 
@@ -371,7 +341,7 @@ uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
     last_timestamp = timestamp;
   }
 
-  ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
+  std::shared_ptr<ros::Publisher> p_publisher = Lddc::GetCurrentPublisher(handle);
   if (kOutputToRos == output_type_) {
     p_publisher->publish(cloud);
   } else {
@@ -506,7 +476,7 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
     ++published_packet;
   }
 
-  ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
+  std::shared_ptr<ros::Publisher> p_publisher = Lddc::GetCurrentPublisher(handle);
   if (kOutputToRos == output_type_) {
     p_publisher->publish(livox_msg);
   } else {
@@ -552,7 +522,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
   QueuePopUpdate(queue);
   ++published_packet;
 
-  ros::Publisher *p_publisher = Lddc::GetCurrentImuPublisher(handle);
+  std::shared_ptr<ros::Publisher> p_publisher = Lddc::GetCurrentImuPublisher(handle);
   if (kOutputToRos == output_type_) {
     p_publisher->publish(imu_data_);
   } else {
@@ -633,89 +603,86 @@ void Lddc::DistributeLidarData(void) {
   }
 }
 
-ros::Publisher *Lddc::GetCurrentPublisher(uint8_t handle) {
-  ros::Publisher **pub = nullptr;
+std::shared_ptr<ros::Publisher> Lddc::GetCurrentPublisher(uint8_t handle) {
+  std::shared_ptr<ros::Publisher> pub = nullptr;
   uint32_t queue_size = kMinEthPacketQueueSize;
 
   if (use_multi_topic_) {
-    pub = &private_pub_[handle];
+    pub = private_pub_[handle];
     queue_size = queue_size * 2; // queue size is 64 for only one lidar
   } else {
-    pub = &global_pub_;
+    pub = global_pub_;
     queue_size = queue_size * 8; // shared queue size is 256, for all lidars
   }
 
-  if (*pub == nullptr) {
-    char name_str[48];
-    memset(name_str, 0, sizeof(name_str));
+  if (pub == nullptr) {
+    std::string name_str{ "livox/lidar" };
     if (use_multi_topic_) {
-      snprintf(name_str, sizeof(name_str), "livox/lidar_%s",
-               lds_->lidars_[handle].info.broadcast_code);
+      name_str.append("_");
+      name_str.append(lds_->lidars_[handle].info.broadcast_code);
       ROS_INFO("Support multi topics.");
     } else {
       ROS_INFO("Support only one topic.");
-      snprintf(name_str, sizeof(name_str), "livox/lidar");
     }
 
-    *pub = new ros::Publisher;
     if (kPointCloud2Msg == transfer_format_) {
-      **pub =
-          cur_node_->advertise<sensor_msgs::PointCloud2>(name_str, queue_size);
+      pub = std::make_shared<ros::Publisher>(
+        cur_node_.advertise<sensor_msgs::PointCloud2>(name_str, queue_size));
       ROS_INFO(
           "%s publish use PointCloud2 format, set ROS publisher queue size %d",
-          name_str, queue_size);
+          name_str.c_str(), queue_size);
     } else if (kLivoxCustomMsg == transfer_format_) {
-      **pub = cur_node_->advertise<livox_ros_driver::CustomMsg>(name_str,
-                                                                queue_size);
+      pub = std::make_shared<ros::Publisher>(
+        cur_node_.advertise<livox_ros_driver::CustomMsg>(name_str, queue_size));
       ROS_INFO(
           "%s publish use livox custom format, set ROS publisher queue size %d",
-          name_str, queue_size);
+          name_str.c_str(), queue_size);
     } else if (kPclPxyziMsg == transfer_format_) {
-      **pub = cur_node_->advertise<PointCloud>(name_str, queue_size);
+      pub = std::make_shared<ros::Publisher>(
+        cur_node_.advertise<PointCloud>(name_str, queue_size));
       ROS_INFO(
           "%s publish use pcl PointXYZI format, set ROS publisher queue "
           "size %d",
-          name_str, queue_size);
+          name_str.c_str(), queue_size);
     }
     else {
       std::runtime_error("Invalid transfer format for Livox Lidar");
     }
   }
 
-  return *pub;
+  global_pub_ = pub;
+  return pub;
 }
 
-ros::Publisher *Lddc::GetCurrentImuPublisher(uint8_t handle) {
-  ros::Publisher **pub = nullptr;
+std::shared_ptr<ros::Publisher> Lddc::GetCurrentImuPublisher(uint8_t handle) {
+  std::shared_ptr<ros::Publisher> pub = nullptr;
   uint32_t queue_size = kMinEthPacketQueueSize;
 
   if (use_multi_topic_) {
-    pub = &private_imu_pub_[handle];
+    pub = private_imu_pub_[handle];
     queue_size = queue_size * 2; // queue size is 64 for only one lidar
   } else {
-    pub = &global_imu_pub_;
+    pub = global_imu_pub_;
     queue_size = queue_size * 8; // shared queue size is 256, for all lidars
   }
 
-  if (*pub == nullptr) {
-    char name_str[48];
-    memset(name_str, 0, sizeof(name_str));
+  if (pub == nullptr) {
+    std::string name_str{ "livox/imu" };
     if (use_multi_topic_) {
       ROS_INFO("Support multi topics.");
-      snprintf(name_str, sizeof(name_str), "livox/imu_%s",
-               lds_->lidars_[handle].info.broadcast_code);
+      name_str.append("_");
+      name_str.append(lds_->lidars_[handle].info.broadcast_code);
     } else {
       ROS_INFO("Support only one topic.");
-      snprintf(name_str, sizeof(name_str), "livox/imu");
     }
 
-    *pub = new ros::Publisher;
-    **pub = cur_node_->advertise<sensor_msgs::Imu>(name_str, queue_size);
-    ROS_INFO("%s publish imu data, set ROS publisher queue size %d", name_str,
+    pub = std::make_shared<ros::Publisher>(cur_node_.advertise<sensor_msgs::Imu>(name_str, queue_size));
+    ROS_INFO("%s publish imu data, set ROS publisher queue size %d", name_str.c_str(),
              queue_size);
   }
 
-  return *pub;
+  global_imu_pub_ = pub;
+  return pub;
 }
 
 void Lddc::CreateBagFile(const std::string &file_name) {
