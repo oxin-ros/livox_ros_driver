@@ -62,8 +62,8 @@ Lddc::Lddc(
 {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
-  global_pub_ = {};
-  global_imu_pub_ = {};
+  global_pub_ = nullptr;
+  global_imu_pub_ = nullptr;
   bag_ = nullptr;
 
   // Initialise IMU message with constant values
@@ -604,7 +604,7 @@ void Lddc::DistributeLidarData(void) {
 }
 
 std::shared_ptr<ros::Publisher> Lddc::GetCurrentPublisher(uint8_t handle) {
-  std::shared_ptr<ros::Publisher> pub {};
+  std::shared_ptr<ros::Publisher> pub = nullptr;
   uint32_t queue_size = kMinEthPacketQueueSize;
 
   if (use_multi_topic_) {
@@ -655,7 +655,7 @@ std::shared_ptr<ros::Publisher> Lddc::GetCurrentPublisher(uint8_t handle) {
 }
 
 std::shared_ptr<ros::Publisher> Lddc::GetCurrentImuPublisher(uint8_t handle) {
-  std::shared_ptr<ros::Publisher> pub{};
+  std::shared_ptr<ros::Publisher> pub = nullptr;
   uint32_t queue_size = kMinEthPacketQueueSize;
 
   if (use_multi_topic_) {
