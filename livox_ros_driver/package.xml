@@ -14,14 +14,10 @@
 
     <buildtool_depend>catkin</buildtool_depend>
 
-    <!--
-        NOTE: If we add pcl_ros as a build dependency, it will transtively include the system PCL headers,
-        which will cause build issues when linking against our custom-built PCL library, so we need to remove it.
-    -->
-    <!-- <build_depend>pcl_ros</build_depend> -->
     <build_depend>livox_sdk</build_depend>
     <build_depend>message_generation</build_depend>
     <build_depend>nodelet</build_depend>
+    <build_depend>pcl_ros</build_depend>
     <build_depend>pluginlib</build_depend>
     <build_depend>rosbag</build_depend>
     <build_depend>roscpp</build_depend>
