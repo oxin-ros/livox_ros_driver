@@ -20,7 +20,7 @@
 
     <node name="$(arg manager_name)" pkg="nodelet" type="nodelet" args="manager"  output="screen"/>
 
-    <node name="livox_lidar" pkg="nodelet" type="nodelet"
+    <node name="livox_lidar" pkg="nodelet" type="nodelet" respawn="true"
           args="load livox_ros_driver/LivoxRosDriverNodelet $(arg manager_name)" output="screen">
         <param name="xfer_format" value="$(arg xfer_format)"/>
         <param name="multi_topic" value="$(arg multi_topic)"/>
