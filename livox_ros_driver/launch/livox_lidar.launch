@@ -19,7 +19,7 @@
     <arg name="user_config_path" default="$(find livox_ros_driver)/config/livox_lidar_config.json"/>
 
     <node name="livox_lidar_publisher" pkg="livox_ros_driver" type="livox_ros_driver_node"
-          required="true" output="screen" args="$(arg cmdline_arg)" respawn="true">
+          output="screen" args="$(arg cmdline_arg)" respawn="true">
         <param name="xfer_format" value="$(arg xfer_format)"/>
         <param name="multi_topic" value="$(arg multi_topic)"/>
         <param name="data_src" value="$(arg data_src)"/>
