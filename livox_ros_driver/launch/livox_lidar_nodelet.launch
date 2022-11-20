@@ -18,7 +18,8 @@
     <arg name="linear_acceleration_cov" default="[9.604e-3, 0, 0, 0, 9.604e-3, 0, 0, 0, 9.604e-3]"/>
     <arg name="user_config_path" default="$(find livox_ros_driver)/config/livox_lidar_config.json"/>
 
-    <node name="$(arg manager_name)" pkg="nodelet" type="nodelet" args="manager"  output="screen"/>
+    <node name="$(arg manager_name)" pkg="nodelet" type="nodelet"
+          args="manager" output="screen" respawn="true"/>
 
     <node name="livox_lidar" pkg="nodelet" type="nodelet" respawn="true"
           args="load livox_ros_driver/LivoxRosDriverNodelet $(arg manager_name)" output="screen">
