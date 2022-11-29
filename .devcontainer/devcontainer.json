@@ -1,0 +1,59 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+    "name": "Livox ROS Driver Workspace",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "LIVOX_SDK_BRANCH": "master",
+            "LIVOX_SDK_BUILD_TYPE": "Debug"
+        }
+    },
+    "containerUser": "vscode",
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "XDG_RUNTIME_DIR": "/tmp/docker-1000"
+    },
+    "runArgs": [
+        "-it",
+        "--rm",
+        "--network", "host",
+        "--cap-add=SYS_PTRACE",
+        "--security-opt", "seccomp=unconfined",
+        "--volume", "${localEnv:HOME}/.ssh:/home/vscode/.ssh",
+        "--volume", "${localWorkspaceFolder}/.vscode:/workspace/.vscode"
+    ],
+    // Configure tool-specific properties.
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "ms-iot.vscode-ros",
+                "ms-python.python",
+                "ms-python.isort",
+                "ms-python.vscode-pylance",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "redhat.vscode-yaml",
+                "shardulm94.trailing-spaces",
+                "smilerobotics.urdf",
+                "streetsidesoftware.code-spell-checker",
+                "yzhang.markdown-all-in-one"
+            ]
+        }
+    },
+    "settings": {
+        "terminal.integrated.profiles.linux": {
+            "bash": {
+                "path": "bash",
+                "icon": "terminal-bash"
+            }
+        }
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": false,
+    "postStartCommand": "bash .devcontainer/configure-catkin.sh"
+}

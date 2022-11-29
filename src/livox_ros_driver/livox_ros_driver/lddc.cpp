@@ -494,17 +494,17 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
   return published_packet;
 }
 
-uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
-                              uint8_t handle) {
-  uint64_t timestamp = 0;
+uint32_t Lddc::PublishImuData(
+  LidarDataQueue *queue,
+  uint32_t packet_num,
+  uint8_t handle)
+  {
   uint32_t published_packet = 0;
 
-  uint8_t data_source = lds_->lidars_[handle].data_src;
   StoragePacket storage_packet;
   QueuePrePop(queue, &storage_packet);
   LivoxEthPacket *raw_packet =
       reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
-  timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
   imu_data_.header.stamp = ros::Time::now();  // to ros time stamp
 
   uint8_t point_buf[2048];
