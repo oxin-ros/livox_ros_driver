@@ -611,12 +611,10 @@ namespace livox_ros
     {
         uint32_t published_packet = 0;
 
-        uint8_t data_source = lds_->lidars_[handle].data_src;
         StoragePacket storage_packet;
         QueuePrePop(queue, &storage_packet);
         LivoxEthPacket *raw_packet =
             reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
-        uint64_t timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
         imu_data_.header.stamp = ros::Time::now(); // to ros time stamp
 
         uint8_t point_buf[2048];
