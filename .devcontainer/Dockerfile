@@ -27,12 +27,13 @@ RUN apt-get update \
         build-essential \
         cmake \
         gdb \
+        libpcl-dev \
         python-catkin-tools \
         python-rosdep \
         python-rosinstall \
         python-vcstool \
-        libpcl-dev \
         ros-melodic-pcl-ros \
+        ssh \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
