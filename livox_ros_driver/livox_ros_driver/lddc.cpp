@@ -37,6 +37,7 @@
 #include <livox_ros_driver/CustomPoint.h>
 #include "lds_lidar.h"
 #include "lds_lvx.h"
+#include "ldcc_config.h"
 
 namespace livox_ros
 {
