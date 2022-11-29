@@ -19,7 +19,7 @@
         "--network", "host",
         "--cap-add=SYS_PTRACE",
         "--security-opt", "seccomp=unconfined",
-        "--volume", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh",
+        "--volume", "${localEnv:HOME}/.ssh:/home/vscode/.ssh",
         "--volume", "${localWorkspaceFolder}/.vscode:/workspace/.vscode",
         "--env", "DISPLAY=${env:DISPLAY}",
         "--env", "XDG_RUNTIME_DIR=/tmp/docker-1000"
