@@ -1,6 +1,6 @@
 // For format details, see https://aka.ms/devcontainer.json.
 {
-    "name": "Livox ROS Driver",
+    "name": "Livox ROS Driver Workspace",
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
@@ -32,6 +32,9 @@
             "extensions": [
                 "ms-azuretools.vscode-docker",
                 "ms-iot.vscode-ros",
+                "ms-python.python",
+                "ms-python.isort",
+                "ms-python.vscode-pylance",
                 "ms-vscode.cmake-tools",
                 "ms-vscode.cpptools",
                 "redhat.vscode-yaml",
