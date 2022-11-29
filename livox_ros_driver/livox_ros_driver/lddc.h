@@ -24,6 +24,7 @@
 #ifndef LIVOX_ROS_DRIVER_LDDC_H_
 #define LIVOX_ROS_DRIVER_LDDC_H_
 
+#include "ldcc_config.h"
 #include "lds.h"
 #include "livox_sdk.h"
 
