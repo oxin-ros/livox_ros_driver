@@ -18,7 +18,7 @@
     <arg name="linear_acceleration_cov" default="[9.604e-3, 0, 0, 0, 9.604e-3, 0, 0, 0, 9.604e-3]"/>
     <arg name="user_config_path" default="$(find livox_ros_driver)/config/livox_lidar_config.json"/>
 
-    <node name="livox_lidar_publisher" pkg="livox_ros_driver" type="livox_ros_driver_node"
+    <node name="livox_lidar" pkg="livox_ros_driver" type="livox_ros_driver_node"
           required="true" output="screen" args="$(arg cmdline_arg)">
         <param name="xfer_format" value="$(arg xfer_format)"/>
         <param name="multi_topic" value="$(arg multi_topic)"/>
