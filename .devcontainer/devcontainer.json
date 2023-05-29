@@ -5,20 +5,32 @@
         "dockerfile": "Dockerfile",
         "args": {
             "LIVOX_SDK_BRANCH": "master",
-            "LIVOX_SDK_BUILD_TYPE": "Debug"
+            "LIVOX_SDK_BUILD_TYPE": "Debug",
+            "VARIANT": "bionic",
+            "ROS_VERSION": "melodic"
         }
     },
     "containerUser": "vscode",
     "containerEnv": {
         "DISPLAY": "${localEnv:DISPLAY}",
-        "XDG_RUNTIME_DIR": "/tmp/docker-1000"
+        // https://askubuntu.com/a/928979
+        "XDG_RUNTIME_DIR": "/tmp/docker-1000",
+        // https://unix.stackexchange.com/a/230442
+        "NO_AT_BRIDGE": "1"
     },
+    "capAdd": [
+        // https://stackoverflow.com/questions/45171339/gdb-cannot-attach-to-process
+        "SYS_PTRACE"
+    ],
     "runArgs": [
         "-it",
         "--rm",
         "--network", "host",
-        "--cap-add=SYS_PTRACE",
+        // https://github.com/moby/moby/issues/38442
         "--security-opt", "seccomp=unconfined",
+        "--runtime", "nvidia",
+        "--gpus", "all",
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw",
         "--volume", "${localEnv:HOME}/.ssh:/home/vscode/.ssh",
         "--volume", "${localWorkspaceFolder}/.vscode:/workspace/.vscode"
     ],
@@ -35,20 +47,21 @@
                 "ms-python.vscode-pylance",
                 "ms-vscode.cmake-tools",
                 "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack",
                 "redhat.vscode-yaml",
                 "shardulm94.trailing-spaces",
                 "smilerobotics.urdf",
                 "streetsidesoftware.code-spell-checker",
                 "yzhang.markdown-all-in-one"
-            ]
-        }
-    },
-    "settings": {
-        "terminal.integrated.profiles.linux": {
-            "bash": {
-                "path": "bash",
-                "icon": "terminal-bash"
-            }
+            ],
+            "settings": {
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "bash",
+                        "icon": "terminal-bash"
+                    }
+                }
+            },
         }
     },
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
