@@ -45,7 +45,7 @@ namespace livox_ros
     ros::NodeHandle node_handle = getNodeHandle();
     ros::NodeHandle private_node_handle = getPrivateNodeHandle();
 
-    ROS_INFO("Livox Ros Driver Version: %s", LIVOX_ROS_DRIVER_VERSION_STRING);
+    NODELET_INFO("Livox Ros Driver Version: %s", LIVOX_ROS_DRIVER_VERSION_STRING);
 
     /** Ros related */
     if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
@@ -53,13 +53,14 @@ namespace livox_ros
     {
       ros::console::notifyLoggerLevelsChanged();
     }
+
     /** Check sdk version */
     LivoxSdkVersion _sdkversion;
     GetLivoxSdkVersion(&_sdkversion);
     if (_sdkversion.major < kSdkVersionMajorLimit)
     {
-      ROS_INFO("The SDK version[%d.%d.%d] is too low", _sdkversion.major,
-               _sdkversion.minor, _sdkversion.patch);
+      NODELET_INFO("The SDK version[%d.%d.%d] is too low", _sdkversion.major,
+                   _sdkversion.minor, _sdkversion.patch);
       return;
     }
 
@@ -72,7 +73,7 @@ namespace livox_ros
     std::string lidar_frame_id = "livox_frame";
     std::string imu_frame_id = "livox_frame";
     bool lidar_bag = true;
-    bool imu_bag   = false;
+    bool imu_bag = false;
 
     private_node_handle.getParam("xfer_format", xfer_format);
     private_node_handle.getParam("multi_topic", multi_topic);
@@ -88,27 +89,27 @@ namespace livox_ros
     publish_freq = std::clamp(publish_freq, 1.0, 100.0);
 
     /** Lidar data distribute control and lidar data source set */
-    lddc_= new Lddc(
-      xfer_format,
-      multi_topic,
-      data_src,
-      output_type,
-      publish_freq,
-      lidar_frame_id,
-      imu_frame_id,
-      lidar_bag,
-      imu_bag);
+    lddc_ = new Lddc(
+        xfer_format,
+        multi_topic,
+        data_src,
+        output_type,
+        publish_freq,
+        lidar_frame_id,
+        imu_frame_id,
+        lidar_bag,
+        imu_bag);
     lddc_->SetRosNodeHandlers(node_handle, private_node_handle);
     lddc_->SetImuCovariances();
 
     int ret = 0;
     if (data_src == kSourceRawLidar)
     {
-      ROS_INFO("Data Source is raw lidar.");
+      NODELET_INFO("Data Source is raw lidar.");
 
       std::string user_config_path;
       private_node_handle.getParam("user_config_path", user_config_path);
-      ROS_INFO("Config file : %s", user_config_path.c_str());
+      NODELET_INFO("Config file : %s", user_config_path.c_str());
 
       std::string cmdline_bd_code;
       private_node_handle.getParam("cmdline_str", cmdline_bd_code);
@@ -121,20 +122,20 @@ namespace livox_ros
       ret = read_lidar->InitLdsLidar(bd_code_list, user_config_path.c_str());
       if (!ret)
       {
-        ROS_INFO("Init lds lidar success!");
+        NODELET_INFO("Init lds lidar success!");
       }
       else
       {
-        ROS_ERROR("Init lds lidar fail!");
+        NODELET_ERROR("Init lds lidar fail!");
       }
     }
     else if (data_src == kSourceRawHub)
     {
-      ROS_INFO("Data Source is hub.");
+      NODELET_INFO("Data Source is hub.");
 
       std::string user_config_path;
       private_node_handle.getParam("user_config_path", user_config_path);
-      ROS_INFO("Config file : %s", user_config_path.c_str());
+      NODELET_INFO("Config file : %s", user_config_path.c_str());
 
       std::string cmdline_bd_code;
       private_node_handle.getParam("cmdline_str", cmdline_bd_code);
@@ -147,16 +148,16 @@ namespace livox_ros
       ret = read_hub->InitLdsHub(bd_code_list, user_config_path.c_str());
       if (!ret)
       {
-        ROS_INFO("Init lds hub success!");
+        NODELET_INFO("Init lds hub success!");
       }
       else
       {
-        ROS_ERROR("Init lds hub fail!");
+        NODELET_ERROR("Init lds hub fail!");
       }
     }
     else
     {
-      ROS_INFO("Data Source is lvx file.");
+      NODELET_INFO("Data Source is lvx file.");
 
       std::string cmdline_file_path;
       private_node_handle.getParam("cmdline_file_path", cmdline_file_path);
@@ -165,7 +166,7 @@ namespace livox_ros
       {
         if (!IsFilePathValid(cmdline_file_path.c_str()))
         {
-          ROS_ERROR("File path invalid : %s !", cmdline_file_path.c_str());
+          NODELET_ERROR("File path invalid : %s !", cmdline_file_path.c_str());
           break;
         }
 
@@ -180,11 +181,11 @@ namespace livox_ros
         int ret = read_lvx->InitLdsLvx(cmdline_file_path.c_str());
         if (!ret)
         {
-          ROS_INFO("Init lds lvx file success!");
+          NODELET_INFO("Init lds lvx file success!");
         }
         else
         {
-          ROS_ERROR("Init lds lvx file fail!");
+          NODELET_ERROR("Init lds lvx file fail!");
         }
       } while (0);
     }
@@ -198,12 +199,19 @@ namespace livox_ros
     poll_lidars_ = private_node_handle.createTimer(ros::Duration(ros::Rate(poll_freq)), &LivoxRosDriverNodelet::proccessLidarLoop, this);
   }
 
-  void LivoxRosDriverNodelet::proccessLidarLoop(const ros::TimerEvent&)
+  void LivoxRosDriverNodelet::proccessLidarLoop(const ros::TimerEvent &)
   {
-    lddc_->DistributeLidarData();
+    try
+    {
+      lddc_->DistributeLidarData();
+    }
+    catch (const std::exception &e)
+    {
+      NODELET_ERROR_STREAM("Exception occurred while polling lidar: " << e.what());
+    }
   }
 
-} //namespace
+} // namespace
 
 // Pluginlib include.
 #include <pluginlib/class_list_macros.h>
