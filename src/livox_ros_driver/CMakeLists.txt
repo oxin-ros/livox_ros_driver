@@ -36,7 +36,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Find pcl lib.
 # Use PCL packaged in our docker container.
-find_package(PCL REQUIRED)
+find_package(PCL QUIET REQUIRED)
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
