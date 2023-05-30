@@ -175,7 +175,7 @@ include_directories(
     timesync
     timesync/user_uart
     livox_ros_driver
-    )
+)
 
 add_library(${PROJECT_NAME}_nodelet
     livox_ros_driver/livox_ros_driver_nodelet.cpp
@@ -192,21 +192,22 @@ add_library(${PROJECT_NAME}_nodelet
     common/comm/comm_protocol.cpp
     common/comm/sdk_protocol.cpp
     common/comm/gps_protocol.cpp
-    )
+)
 
 target_link_libraries(${PROJECT_NAME}_nodelet
     ${Boost_LIBRARY}
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
     ${APR_LIBRARIES}
-    )
+)
 
 add_dependencies(
     ${PROJECT_NAME}_nodelet
     ${PROJECT_NAME}_generate_messages_cpp
     ${catkin_EXPORTED_TARGETS}
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${${PROJECT_NAME}_nodelet_EXPORTED_TARGETS})
+    ${${PROJECT_NAME}_nodelet_EXPORTED_TARGETS}
+)
 
 #---------------------------------------------------------------------------------------
 # Install
