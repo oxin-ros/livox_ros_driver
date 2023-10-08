@@ -12,7 +12,7 @@
     "containerUser": "vscode",
     "containerEnv": {
         "DISPLAY": "${localEnv:DISPLAY}",
-        "XDG_RUNTIME_DIR": "/tmp/docker-1000"
+        "XDG_RUNTIME_DIR": "/tmp/vscode"
     },
     "runArgs": [
         "-it",
@@ -21,9 +21,7 @@
         "--cap-add=SYS_PTRACE",
         "--security-opt", "seccomp=unconfined",
         "--volume", "${localEnv:HOME}/.ssh:/home/vscode/.ssh",
-        "--volume", "${localWorkspaceFolder}/.vscode:/workspace/.vscode",
-        "--env", "DISPLAY=${env:DISPLAY}",
-        "--env", "XDG_RUNTIME_DIR=/tmp/docker-1000"
+        "--volume", "${localWorkspaceFolder}/.vscode:/workspace/.vscode"
     ],
     // Configure tool-specific properties.
     "customizations": {
@@ -43,14 +41,14 @@
                 "smilerobotics.urdf",
                 "streetsidesoftware.code-spell-checker",
                 "yzhang.markdown-all-in-one"
-            ]
-        }
-    },
-    "settings": {
-        "terminal.integrated.profiles.linux": {
-            "bash": {
-                "path": "bash",
-                "icon": "terminal-bash"
+            ],
+            "settings": {
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "bash",
+                        "icon": "terminal-bash"
+                    }
+                }
             }
         }
     },

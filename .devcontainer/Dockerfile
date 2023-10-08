@@ -34,6 +34,7 @@ RUN apt-get update \
         python3-vcstool \
         libpcl-dev \
         ros-${ROS_VERSION}-pcl-ros \
+        ros-${ROS_VERSION}-rviz \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -50,6 +51,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(ALL\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 USER $USERNAME
+
+# Create the XDG_RUNTIME_DIR
+RUN sudo mkdir -p /tmp/vscode \
+    && sudo chown -R $USERNAME:$USERNAME /tmp/vscode
 
 # Install Livox-SDK.
 WORKDIR /tmp
