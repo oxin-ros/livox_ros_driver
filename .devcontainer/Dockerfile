@@ -1,7 +1,6 @@
-
-ARG VARIANT="bionic"
-ARG ROS_VERSION="melodic"
-FROM ros:${ROS_VERSION}-ros-base-${VARIANT}
+# syntax=docker/dockerfile:1
+ARG ROS_VERSION="noetic"
+FROM ros:${ROS_VERSION}-ros-base
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -22,17 +21,19 @@ RUN apt-get update \
     && rm ./kitware-archive.sh
 
 # Install APT depenencies
+ARG ROS_VERSION="noetic"
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes \
         build-essential \
         cmake \
         gdb \
-        python-catkin-tools \
-        python-rosdep \
-        python-rosinstall \
-        python-vcstool \
+        git \
+        python3-catkin-tools \
+        python3-rosdep \
+        python3-rosinstall \
+        python3-vcstool \
         libpcl-dev \
-        ros-melodic-pcl-ros \
+        ros-${ROS_VERSION}-pcl-ros \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

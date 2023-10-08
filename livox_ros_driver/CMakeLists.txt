@@ -31,14 +31,12 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     sensor_msgs
     std_msgs
-    # The version of PCL included by pcl_ros conflicts with the version used below.
-    # These libraries pull in the system version of the PCL headers, causing build issues.
-    # pcl_ros
+    pcl_ros
 )
 
 ## Find pcl lib.
 # Use system PCL.
-find_package(PCL 1.8 REQUIRED)
+find_package(PCL QUIET REQUIRED)
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
@@ -72,9 +70,7 @@ catkin_package(CATKIN_DEPENDS
     roscpp
     rospy
     std_msgs
-    # The version of PCL included by pcl_ros conflicts with the version used below.
-    # These libraries pull in the system version of the PCL headers, causing build issues.
-    # pcl_ros
+    pcl_ros
 )
 
 #---------------------------------------------------------------------------------------

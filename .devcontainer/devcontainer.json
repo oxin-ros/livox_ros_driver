@@ -5,7 +5,8 @@
         "dockerfile": "Dockerfile",
         "args": {
             "LIVOX_SDK_BRANCH": "master",
-            "LIVOX_SDK_BUILD_TYPE": "Debug"
+            "LIVOX_SDK_BUILD_TYPE": "Debug",
+            "ROS_VERSION": "noetic"
         }
     },
     "containerUser": "vscode",
