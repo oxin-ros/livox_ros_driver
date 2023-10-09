@@ -43,35 +43,35 @@
 namespace livox_ros {
 
 /** Max lidar data source num */
-const uint32_t kMaxSourceLidar = 32;
+static constexpr uint32_t kMaxSourceLidar = 32;
 
 /** Eth packet relative info parama */
-const uint32_t kMaxPointPerEthPacket = 100;
-const uint32_t kMinEthPacketQueueSize = 32;   /**< must be 2^n */
-const uint32_t kMaxEthPacketQueueSize = 131072; /**< must be 2^n */
-const uint32_t kImuEthPacketQueueSize = 256;
+static constexpr uint32_t kMaxPointPerEthPacket = 100;
+static constexpr uint32_t kMinEthPacketQueueSize = 32;   /**< must be 2^n */
+static constexpr uint32_t kMaxEthPacketQueueSize = 131072; /**< must be 2^n */
+static constexpr uint32_t kImuEthPacketQueueSize = 256;
 
-const uint32_t KEthPacketHeaderLength = 18; /**< (sizeof(LivoxEthPacket) - 1) */
-// const uint32_t KEthPacketMaxLength          = 1500;
-const uint32_t KCartesianPointSize = 13;
-const uint32_t KSphericalPointSzie = 9;
+static constexpr uint32_t KEthPacketHeaderLength = 18; /**< (sizeof(LivoxEthPacket) - 1) */
+// static constexpr uint32_t KEthPacketMaxLength          = 1500;
+static constexpr uint32_t KCartesianPointSize = 13;
+static constexpr uint32_t KSphericalPointSzie = 9;
 
-const uint64_t kRosTimeMax = 4294967296000000000; /**< 2^32 * 1000000000ns */
-const int64_t kPacketTimeGap = 1000000; /**< 1ms = 1000000ns */
+static constexpr uint64_t kRosTimeMax = 4294967296000000000; /**< 2^32 * 1000000000ns */
+static constexpr int64_t kPacketTimeGap = 1000000; /**< 1ms = 1000000ns */
 /**< the threshold of packet continuous */
-const int64_t kMaxPacketTimeGap = 1700000;
+static constexpr int64_t kMaxPacketTimeGap = 1700000;
 /**< the threshold of device disconect */
-const int64_t kDeviceDisconnectThreshold = 1000000000;
-const int64_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
+static constexpr int64_t kDeviceDisconnectThreshold = 1000000000;
+static constexpr int64_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
 
-const int kPathStrMinSize = 4;   /**< Must more than 4 char */
-const int kPathStrMaxSize = 256; /**< Must less than 256 char */
-const int kBdCodeSize = 15;
+static constexpr int kPathStrMinSize = 4;   /**< Must more than 4 char */
+static constexpr int kPathStrMaxSize = 256; /**< Must less than 256 char */
+static constexpr int kBdCodeSize = 15;
 
-const uint32_t kPointXYZRSize = 16;
-const uint32_t kPointXYZRTRSize = 18;
+static constexpr uint32_t kPointXYZRSize = 16;
+static constexpr uint32_t kPointXYZRTRSize = 18;
 
-const double PI = 3.14159265358979323846;
+static constexpr double PI = 3.14159265358979323846;
 
 /** Lidar connect state */
 typedef enum {

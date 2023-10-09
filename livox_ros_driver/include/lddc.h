@@ -51,7 +51,7 @@ namespace livox_ros
     class Lddc
     {
     public:
-        Lddc(const Lddc_config &lddc_config);
+        Lddc(const LdccConfig &LdccConfig);
         ~Lddc();
 
         int RegisterLds(Lds *lds);
@@ -63,8 +63,6 @@ namespace livox_ros
         uint8_t IsMultiTopic(void) { return config_.multi_topic; }
         void SetRosNodeHandlers(ros::NodeHandle *node, ros::NodeHandle *private_node);
         void SetImuCovariances();
-
-        void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };
 
         Lds *lds_;
 
@@ -81,8 +79,11 @@ namespace livox_ros
         uint32_t PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
                                 uint8_t handle);
 
-        ros::Publisher *GetCurrentPublisher(uint8_t handle);
-        ros::Publisher *GetCurrentImuPublisher(uint8_t handle);
+        void ConfigureLidarPublishers();
+        void ConfigureImuPublishers();
+
+        ros::Publisher& GetCurrentPublisher(uint8_t handle);
+        ros::Publisher& GetCurrentImuPublisher(uint8_t handle);
         void PollingLidarPointCloudData(uint8_t handle, LidarDevice *lidar);
         void PollingLidarImuData(uint8_t handle, LidarDevice *lidar);
         void InitPointcloud2MsgHeader(sensor_msgs::PointCloud2 &cloud);
@@ -92,12 +93,12 @@ namespace livox_ros
                                    LivoxPointXyzrtl *src_point, uint32_t num, uint32_t offset_time,
                                    uint32_t point_interval, uint32_t echo_num);
 
-        Lddc_config config_;
+        LdccConfig config_;
         uint32_t publish_period_ns_;
-        ros::Publisher *private_pub_[kMaxSourceLidar];
-        ros::Publisher *global_pub_;
-        ros::Publisher *private_imu_pub_[kMaxSourceLidar];
-        ros::Publisher *global_imu_pub_;
+        std::vector<ros::Publisher> private_pub_;
+        ros::Publisher global_pub_;
+        std::vector<ros::Publisher> private_imu_pub_;
+        ros::Publisher global_imu_pub_;
 
         // Covariances
         std::vector<double> angular_velocity_cov_;

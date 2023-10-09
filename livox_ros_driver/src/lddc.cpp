@@ -32,6 +32,7 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <rosfmt/full.h>
 
 #include <livox_ros_driver/CustomMsg.h>
 #include <livox_ros_driver/CustomPoint.h>
@@ -43,15 +44,11 @@ namespace livox_ros
 {
 
     /** Lidar Data Distribute Control--------------------------------------------*/
-    Lddc::Lddc(const Lddc_config &lddc_config) :
-        config_(lddc_config)
+    Lddc::Lddc(const LdccConfig &LdccConfig) :
+        config_(LdccConfig)
     {
         publish_period_ns_ = kNsPerSecond / config_.frequency;
         lds_ = nullptr;
-        memset(private_pub_, 0, sizeof(private_pub_));
-        memset(private_imu_pub_, 0, sizeof(private_imu_pub_));
-        global_pub_ = nullptr;
-        global_imu_pub_ = nullptr;
         cur_node_ = nullptr;
         private_node_ = nullptr;
         bag_ = nullptr;
@@ -62,35 +59,9 @@ namespace livox_ros
 
     Lddc::~Lddc()
     {
-        if (global_pub_)
-        {
-            delete global_pub_;
-        }
-
-        if (global_imu_pub_)
-        {
-            delete global_imu_pub_;
-        }
-
         if (lds_)
         {
             lds_->PrepareExit();
-        }
-
-        for (uint32_t i = 0; i < kMaxSourceLidar; i++)
-        {
-            if (private_pub_[i])
-            {
-                delete private_pub_[i];
-            }
-        }
-
-        for (uint32_t i = 0; i < kMaxSourceLidar; i++)
-        {
-            if (private_imu_pub_[i])
-            {
-                delete private_imu_pub_[i];
-            }
         }
     }
 
@@ -98,6 +69,8 @@ namespace livox_ros
     {
         cur_node_ = node;
         private_node_ = private_node;
+        ConfigureLidarPublishers();
+        ConfigureImuPublishers();
     }
 
     void Lddc::SetImuCovariances()
@@ -293,18 +266,18 @@ namespace livox_ros
         cloud.data.resize(cloud.row_step); /** Adjust to the real size */
 
 
-        ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
+        auto publisher = Lddc::GetCurrentPublisher(handle);
         if (kOutputToRos == config_.output_type)
         {
             // UFR change- define ptr to pointcloud msg
             const sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud);
-            p_publisher->publish(msg_cloudPtr); // UFR change
+            publisher.publish(msg_cloudPtr); // UFR change
         }
         else
         {
             if (bag_ && config_.lidar_bag)
             {
-                bag_->write(p_publisher->getTopic(), ros::Time::now(),
+                bag_->write(publisher.getTopic(), ros::Time::now(),
                             cloud);
             }
         }
@@ -420,16 +393,16 @@ namespace livox_ros
             last_timestamp = timestamp;
         }
 
-        ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
+        auto publisher = Lddc::GetCurrentPublisher(handle);
         if (kOutputToRos == config_.output_type)
         {
-            p_publisher->publish(cloud);
+            publisher.publish(cloud);
         }
         else
         {
             if (bag_ && config_.lidar_bag)
             {
-                bag_->write(p_publisher->getTopic(), ros::Time::now(),
+                bag_->write(publisher.getTopic(), ros::Time::now(),
                             cloud);
             }
         }
@@ -584,17 +557,17 @@ namespace livox_ros
             ++published_packet;
         }
 
-        ros::Publisher *p_publisher = Lddc::GetCurrentPublisher(handle);
+        auto publisher = Lddc::GetCurrentPublisher(handle);
         if (kOutputToRos == config_.output_type)
         {
-            p_publisher->publish(livox_msg);
+            publisher.publish(livox_msg);
         }
         else
         {
             if (bag_ && config_.lidar_bag)
             {
                 bag_->write(
-                    p_publisher->getTopic(),
+                    publisher.getTopic(),
                     ros::Time::now(),
                     livox_msg);
             }
@@ -632,17 +605,17 @@ namespace livox_ros
         QueuePopUpdate(queue);
         ++published_packet;
 
-        ros::Publisher *p_publisher = Lddc::GetCurrentImuPublisher(handle);
+        auto publisher = Lddc::GetCurrentImuPublisher(handle);
         if (kOutputToRos == config_.output_type)
         {
-            p_publisher->publish(imu_data_);
+            publisher.publish(imu_data_);
         }
         else
         {
             if (bag_ && config_.imu_bag)
             {
                 bag_->write(
-                    p_publisher->getTopic(),
+                    publisher.getTopic(),
                     ros::Time::now(),
                     imu_data_);
             }
@@ -740,66 +713,81 @@ namespace livox_ros
         }
     }
 
-    ros::Publisher *Lddc::GetCurrentPublisher(uint8_t handle)
-    {
-        ros::Publisher **pub = nullptr;
-        uint32_t queue_size = kMinEthPacketQueueSize;
 
+    void Lddc::ConfigureLidarPublishers()
+    {
         if (config_.multi_topic)
         {
-            pub = &private_pub_[handle];
-            queue_size = queue_size * 2; // queue size is 64 for only one lidar
+            const uint32_t queue_size = kMinEthPacketQueueSize * 2 ; // queue size is 64 for only one lidar
+            ROS_INFO("Support multi topics.");
+            for (size_t handle = 0; handle < kMaxSourceLidar; handle++)
+            {
+                const std::string topic_name = fmt::format("livox/imu_%s", lds_->lidars_[handle].info.broadcast_code);
+                switch (static_cast<TransferType>(config_.format))
+                {
+                    case TransferType::kPointCloud2Msg:
+                    {
+                        private_pub_[handle] = cur_node_->advertise<sensor_msgs::PointCloud2>(topic_name, queue_size);
+                        ROS_INFO(
+                            "%s publish use PointCloud2 format, set ROS publisher queue size %d",
+                            topic_name.c_str(), queue_size);
+                        break;
+                    }
+                    case TransferType::kLivoxCustomMsg:
+                    {
+                        private_pub_[handle] = cur_node_->advertise<livox_ros_driver::CustomMsg>(topic_name,
+                                                                                queue_size);
+                        ROS_INFO(
+                            "%s publish use livox custom format, set ROS publisher queue size %d",
+                            topic_name.c_str(), queue_size);
+                        break;
+                    }
+                    case TransferType::kPclPxyziMsg:
+                    {
+                        private_pub_[handle] = cur_node_->advertise<PointCloud>(topic_name, queue_size);
+                        ROS_INFO(
+                            "%s publish use pcl PointXYZI format, set ROS publisher queue "
+                            "size %d",
+                            topic_name.c_str(), queue_size);
+                        break;
+                    }
+                    default:
+                        std::runtime_error("Invalid transfer format for Livox Lidar");
+                        break;
+                }
+            }
         }
         else
         {
-            pub = &global_pub_;
-            queue_size = queue_size * 8; // shared queue size is 256, for all lidars
-        }
-
-        if (*pub == nullptr)
-        {
-            char name_str[48];
-            memset(name_str, 0, sizeof(name_str));
-            if (config_.multi_topic)
-            {
-                snprintf(name_str, sizeof(name_str), "livox/lidar_%s",
-                         lds_->lidars_[handle].info.broadcast_code);
-                ROS_INFO("Support multi topics.");
-            }
-            else
-            {
-                ROS_INFO("Support only one topic.");
-                snprintf(name_str, sizeof(name_str), "livox/lidar");
-            }
-
-            *pub = new ros::Publisher;
+            ROS_INFO("Support only one topic.");
+            const std::string topic_name = "livox/lidar";
+            const uint32_t queue_size = kMinEthPacketQueueSize * 8; // shared queue size is 256, for all lidars
             switch (static_cast<TransferType>(config_.format))
             {
                 case TransferType::kPointCloud2Msg:
                 {
-                    **pub =
-                        cur_node_->advertise<sensor_msgs::PointCloud2>(name_str, queue_size);
+                    global_pub_ = cur_node_->advertise<sensor_msgs::PointCloud2>(topic_name, queue_size);
                     ROS_INFO(
                         "%s publish use PointCloud2 format, set ROS publisher queue size %d",
-                        name_str, queue_size);
+                        topic_name.c_str(), queue_size);
                     break;
                 }
                 case TransferType::kLivoxCustomMsg:
                 {
-                    **pub = cur_node_->advertise<livox_ros_driver::CustomMsg>(name_str,
+                    global_pub_ = cur_node_->advertise<livox_ros_driver::CustomMsg>(topic_name,
                                                                             queue_size);
                     ROS_INFO(
                         "%s publish use livox custom format, set ROS publisher queue size %d",
-                        name_str, queue_size);
+                        topic_name.c_str(), queue_size);
                     break;
                 }
                 case TransferType::kPclPxyziMsg:
                 {
-                    **pub = cur_node_->advertise<PointCloud>(name_str, queue_size);
+                    global_pub_ = cur_node_->advertise<PointCloud>(topic_name, queue_size);
                     ROS_INFO(
                         "%s publish use pcl PointXYZI format, set ROS publisher queue "
                         "size %d",
-                        name_str, queue_size);
+                        topic_name.c_str(), queue_size);
                     break;
                 }
                 default:
@@ -807,49 +795,39 @@ namespace livox_ros
                     break;
             }
         }
-
-        return *pub;
     }
 
-    ros::Publisher *Lddc::GetCurrentImuPublisher(uint8_t handle)
+    void Lddc::ConfigureImuPublishers()
     {
-        ros::Publisher **pub = nullptr;
-        uint32_t queue_size = kMinEthPacketQueueSize;
-
         if (config_.multi_topic)
         {
-            pub = &private_imu_pub_[handle];
-            queue_size = queue_size * 2; // queue size is 64 for only one lidar
+            ROS_INFO("Support multi topics.");
+            const uint32_t queue_size = kMinEthPacketQueueSize * 2 ; // queue size is 64 for only one lidar
+            for (size_t handle = 0; handle < kMaxSourceLidar; handle++)
+            {
+                const std::string topic_name = fmt::format("/livox/imu_%s", lds_->lidars_[handle].info.broadcast_code);
+                private_imu_pub_[handle] = cur_node_->advertise<sensor_msgs::Imu>(topic_name, queue_size);
+            }
         }
         else
         {
-            pub = &global_imu_pub_;
-            queue_size = queue_size * 8; // shared queue size is 256, for all lidars
+            ROS_INFO("Support only one topic.");
+            const std::string topic_name = "/livox/imu";
+            const uint32_t queue_size = kMinEthPacketQueueSize * 8; // shared queue size is 256, for all lidars
+            global_imu_pub_ = cur_node_->advertise<sensor_msgs::Imu>(topic_name, queue_size);
+            ROS_INFO("%s publish imu data, set ROS publisher queue size %d", topic_name.c_str(),
+                queue_size);
         }
+    }
 
-        if (*pub == nullptr)
-        {
-            char name_str[48];
-            memset(name_str, 0, sizeof(name_str));
-            if (config_.multi_topic)
-            {
-                ROS_INFO("Support multi topics.");
-                snprintf(name_str, sizeof(name_str), "livox/imu_%s",
-                         lds_->lidars_[handle].info.broadcast_code);
-            }
-            else
-            {
-                ROS_INFO("Support only one topic.");
-                snprintf(name_str, sizeof(name_str), "livox/imu");
-            }
+    ros::Publisher& Lddc::GetCurrentPublisher(uint8_t handle)
+    {
+        return config_.multi_topic ? private_pub_[handle] : global_pub_;
+    }
 
-            *pub = new ros::Publisher;
-            **pub = cur_node_->advertise<sensor_msgs::Imu>(name_str, queue_size);
-            ROS_INFO("%s publish imu data, set ROS publisher queue size %d", name_str,
-                     queue_size);
-        }
-
-        return *pub;
+    ros::Publisher& Lddc::GetCurrentImuPublisher(uint8_t handle)
+    {
+        return config_.multi_topic ? private_imu_pub_[handle] : global_imu_pub_;
     }
 
     void Lddc::CreateBagFile(const std::string &file_name)

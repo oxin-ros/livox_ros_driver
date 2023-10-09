@@ -25,13 +25,14 @@ find_package(catkin REQUIRED COMPONENTS
     livox_sdk
     message_generation
     nodelet
+    pcl_ros
     pluginlib
     rosbag
     roscpp
+    rosfmt
     rospy
     sensor_msgs
     std_msgs
-    pcl_ros
 )
 
 ## Find pcl lib.
@@ -66,11 +67,12 @@ catkin_package(CATKIN_DEPENDS
     livox_sdk
     message_runtime
     nodelet
+    pcl_ros
     pluginlib
     roscpp
+    rosfmt
     rospy
     std_msgs
-    pcl_ros
 )
 
 #---------------------------------------------------------------------------------------
@@ -119,14 +121,14 @@ add_dependencies(
 #---------------------------------------------------------------------------------------
 target_sources(${PROJECT_NAME}_node
     PRIVATE
-    livox_ros_driver/lvx_file.cpp
-    livox_ros_driver/ldq.cpp
-    livox_ros_driver/lds.cpp
-    livox_ros_driver/lds_lvx.cpp
-    livox_ros_driver/lds_lidar.cpp
-    livox_ros_driver/lds_hub.cpp
-    livox_ros_driver/lddc.cpp
-    livox_ros_driver/livox_ros_driver.cpp
+    src/lvx_file.cpp
+    src/ldq.cpp
+    src/lds.cpp
+    src/lds_lvx.cpp
+    src/lds_lidar.cpp
+    src/lds_hub.cpp
+    src/lddc.cpp
+    src/livox_ros_driver.cpp
     timesync/timesync.cpp
     timesync/user_uart/user_uart.cpp
     common/comm/comm_protocol.cpp
@@ -165,28 +167,28 @@ target_link_libraries(${PROJECT_NAME}_node
 # ADD NODELET LIBRARIES
 #---------------------------------------------------------------------------------------
 include_directories(
+    ${APR_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
-    ${APR_INCLUDE_DIRS}
     common
+    common/comm
     common/rapidjson
     comon/rapdidxml
-    common/comm
+    include
     timesync
     timesync/user_uart
-    livox_ros_driver
     )
 
 add_library(${PROJECT_NAME}_nodelet
-    livox_ros_driver/livox_ros_driver_nodelet.cpp
-    livox_ros_driver/lvx_file.cpp
-    livox_ros_driver/ldq.cpp
-    livox_ros_driver/lds.cpp
-    livox_ros_driver/lds_lvx.cpp
-    livox_ros_driver/lds_lidar.cpp
-    livox_ros_driver/lds_hub.cpp
-    livox_ros_driver/lddc.cpp
-    livox_ros_driver/livox_ros_driver.cpp
+    src/livox_ros_driver_nodelet.cpp
+    src/lvx_file.cpp
+    src/ldq.cpp
+    src/lds.cpp
+    src/lds_lvx.cpp
+    src/lds_lidar.cpp
+    src/lds_hub.cpp
+    src/lddc.cpp
+    src/livox_ros_driver.cpp
     timesync/timesync.cpp
     timesync/user_uart/user_uart.cpp
     common/comm/comm_protocol.cpp

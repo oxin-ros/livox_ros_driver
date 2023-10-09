@@ -23,13 +23,16 @@
 //
 #pragma once
 
-#include "livox_ros_driver.h"
-#include "../lddc.h"
+#include <memory>
+#include <optional>
+#include <thread>
 
 #include <ros/ros.h>
 #include <nodelet/nodelet.h>
-#include <thread>
-#include <memory>
+
+#include "ldcc_config.h"
+#include "lddc.h"
+#include "livox_ros_driver_version.h"
 
 namespace livox_ros
 {
@@ -43,9 +46,23 @@ class LivoxRosDriverNodelet : public nodelet::Nodelet
         void onInit(void);
 
     private:
+        bool InitializeRawLidar(
+            ros::NodeHandle &pnh, const double publish_frequency);
+        bool InitializeRawHub(
+            ros::NodeHandle &pnh, const double publish_frequency);
+        bool InitializeLvxFile(
+            ros::NodeHandle &pnh, const double publish_frequency);
+
         void proccessLidarLoop(const ros::TimerEvent&);
-        Lddc* lddc_;
+        std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& nh);
+        std::optional<TimeSyncRawConfig> GetTimesyncConfig(ros::NodeHandle& nh);
+
+        static void SignalHandler(int signum);
+
+        std::unique_ptr<livox_ros::Lddc> lddc_;
         ros::Timer poll_lidars_;
+
+        static constexpr int32_t MIN_SUPPORTED_SDK_VERSION = 2;
 };
 
 } // namespace livox_ros

@@ -22,19 +22,27 @@
 // SOFTWARE.
 //
 
-#ifndef LIVOX_ROS_DRIVER_INClUDE_LIVOX_ROS_DRIVER_H_
-#define LIVOX_ROS_DRIVER_INClUDE_LIVOX_ROS_DRIVER_H_
 
-#define LIVOX_ROS_DRIVER_VER_MAJOR 2
-#define LIVOX_ROS_DRIVER_VER_MINOR 6
-#define LIVOX_ROS_DRIVER_VER_PATCH 0
+// ROS includes.
+#include <ros/ros.h>
+#include <nodelet/loader.h>
+#include "livox_ros_driver_nodelet.h"
 
-#define GET_STRING(n) GET_STRING_DIRECT(n)
-#define GET_STRING_DIRECT(n) #n
 
-#define LIVOX_ROS_DRIVER_VERSION_STRING                      \
-  GET_STRING(LIVOX_ROS_DRIVER_VER_MAJOR)                     \
-  "." GET_STRING(LIVOX_ROS_DRIVER_VER_MINOR) "." GET_STRING( \
-      LIVOX_ROS_DRIVER_VER_PATCH)
+int main(int argc, char **argv)
+{
+    // Initialize the ros subsystem.
+    ros::init(argc, argv, "livox_lidar_publisher");
 
-#endif
+    // Load the ROS nodelet.
+    nodelet::Loader nodelet;
+    nodelet::M_string remap(ros::names::getRemappings());
+    nodelet::V_string nargv;
+    std::string nodelet_name = ros::this_node::getName();
+    nodelet.load(nodelet_name, "livox_ros_driver/LivoxRosDriverNodelet", remap, nargv);
+
+    // Wait for the node to exit.
+    ros::spin();
+
+    return 0;
+}

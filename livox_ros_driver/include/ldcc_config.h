@@ -4,7 +4,7 @@
 
 namespace livox_ros
 {
-    struct Lddc_config
+    struct LdccConfig
     {
         int format;
         int multi_topic;
