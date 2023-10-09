@@ -8,7 +8,7 @@ xfer_format: 0
 # - 1: Each LiDAR device has its own topic to publish point cloud data
 multi_topic: 0
 # The frequency that the point cloud should be published.
-publish_freq: 25.0
+publish_freq: 10.0
 # The frame ID of the lidar.
 lidar_frame_id: livox_frame
 # The frame ID of the IMU.
