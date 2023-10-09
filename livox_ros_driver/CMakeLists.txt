@@ -121,12 +121,9 @@ add_dependencies(
 #---------------------------------------------------------------------------------------
 target_sources(${PROJECT_NAME}_node
     PRIVATE
-    src/lvx_file.cpp
     src/ldq.cpp
     src/lds.cpp
-    src/lds_lvx.cpp
     src/lds_lidar.cpp
-    src/lds_hub.cpp
     src/lddc.cpp
     src/livox_ros_driver.cpp
     timesync/timesync.cpp
@@ -181,12 +178,9 @@ include_directories(
 
 add_library(${PROJECT_NAME}_nodelet
     src/livox_ros_driver_nodelet.cpp
-    src/lvx_file.cpp
     src/ldq.cpp
     src/lds.cpp
-    src/lds_lvx.cpp
     src/lds_lidar.cpp
-    src/lds_hub.cpp
     src/lddc.cpp
     src/livox_ros_driver.cpp
     timesync/timesync.cpp

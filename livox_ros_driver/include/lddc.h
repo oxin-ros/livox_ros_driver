@@ -56,7 +56,6 @@ namespace livox_ros
 
         int RegisterLds(Lds *lds);
         void DistributeLidarData(void);
-        void CreateBagFile(const std::string &file_name);
         void PrepareExit(void);
 
         uint8_t GetTransferFormat(void) { return config_.format; }

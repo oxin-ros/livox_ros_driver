@@ -33,23 +33,11 @@
 #include <optional>
 
 #include "lds.h"
+#include "lidar_config.h"
 #include "livox_sdk.h"
-#include "rapidjson/document.h"
 #include "timesync.h"
 
 namespace livox_ros {
-
-struct LdsLidarConfig
-{
-  std::string broadcast_code;
-  bool enable_connect;
-  bool enable_fan;
-  int return_mode;
-  int coordinate;
-  int imu_rate;
-  int extrinsic_parameter_source;
-  bool enable_high_sensitivity;
-};
 
 /**
  * LiDAR data source, data from dependent lidar.
@@ -61,9 +49,12 @@ class LdsLidar : public Lds {
     return &lds_lidar;
   }
 
-  int InitLdsLidar(std::vector<std::string> &broadcast_code_strs, const char *user_config_path);
-  int InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, const std::optional<TimeSyncRawConfig>& timesync_config);
+  int InitLdsLidar(
+    const std::optional<UserRawConfig>& lidar_config,
+    const std::optional<TimeSyncRawConfig>& timesync_config);
   int DeInitLdsLidar(void);
+
+  const UserRawConfig& GetConfig() const { return raw_config_; }
 
  private:
   LdsLidar(uint32_t interval_ms);
@@ -105,29 +96,18 @@ class LdsLidar : public Lds {
                                    void *clent_data);
 
   void ResetLdsLidar(void);
-  int AddBroadcastCodeToWhitelist(const char *broadcast_code);
-  bool IsBroadcastCodeExistInWhitelist(const char *broadcast_code);
 
-  void EnableAutoConnectMode(void) { auto_connect_mode_ = true; }
-  void DisableAutoConnectMode(void) { auto_connect_mode_ = false; }
-  bool IsAutoConnectMode(void) { return auto_connect_mode_; }
+  void SetRawConfig(const UserRawConfig& config) { raw_config_ = config; }
   int ParseTimesyncConfig(const TimeSyncRawConfig& timesync_config);
-  int ParseTimesyncConfig(rapidjson::Document &doc);
-  int ParseConfigFile(const char *pathname);
-  int AddRawUserConfig(const UserRawConfig& config);
-  bool IsExistInRawConfig(const char *broadcast_code);
-  int GetRawConfig(const char *broadcast_code, UserRawConfig &config);
 
-  bool auto_connect_mode_;
-  uint32_t whitelist_count_;
   volatile bool is_initialized_;
-  char broadcast_code_whitelist_[kMaxLidarCount][kBroadcastCodeSize];
-  std::vector<UserRawConfig> raw_config_;
 
   bool enable_timesync_;
   TimeSync *timesync_;
   TimeSyncConfig timesync_config_;
   std::mutex config_mutex_;
+
+  UserRawConfig raw_config_;
 };
 
 }  // namespace livox_ros

@@ -30,9 +30,7 @@
 #include <vector>
 
 #include "lddc.h"
-#include "lds_hub.h"
 #include "lds_lidar.h"
-#include "lds_lvx.h"
 #include "livox_sdk.h"
 #include <ros/ros.h>
 
@@ -72,20 +70,14 @@ namespace livox_ros
         ldcc_config.data_src = kSourceRawLidar;
         ldcc_config.format = kPointCloud2Msg;
         ldcc_config.frequency = 10.0; /* Hz */
-        ldcc_config.imu_bag = false;
         ldcc_config.imu_frame_id = "livox_frame";
-        ldcc_config.lidar_bag = true;
         ldcc_config.lidar_frame_id = "livox_frame";
         ldcc_config.multi_topic = 0;
-        ldcc_config.output_type = kOutputToRos;
 
         pnh.getParam("data_src", ldcc_config.data_src);
-        pnh.getParam("enable_imu_bag", ldcc_config.imu_bag);
-        pnh.getParam("enable_lidar_bag", ldcc_config.lidar_bag);
         pnh.getParam("imu_frame_id", ldcc_config.imu_frame_id);
         pnh.getParam("lidar_frame_id", ldcc_config.lidar_frame_id);
         pnh.getParam("multi_topic", ldcc_config.multi_topic);
-        pnh.getParam("output_data_type", ldcc_config.output_type);
         pnh.getParam("publish_freq", ldcc_config.frequency);
         pnh.getParam("xfer_format", ldcc_config.format);
 
@@ -102,12 +94,6 @@ namespace livox_ros
         {
         case LidarDataSourceType::kSourceRawLidar:
             lidar_data_source_initialized = InitializeRawLidar(pnh, ldcc_config.frequency);
-            break;
-        case LidarDataSourceType::kSourceRawHub:
-            lidar_data_source_initialized = InitializeRawHub(pnh, ldcc_config.frequency);
-            break;
-        case LidarDataSourceType::kSourceLvxFile:
-            lidar_data_source_initialized = InitializeLvxFile(pnh, ldcc_config.frequency);
             break;
         default:
             ROS_ERROR("Unsupported data source: %i", ldcc_config.data_src);
@@ -157,67 +143,6 @@ namespace livox_ros
         return true;
     }
 
-    bool LivoxRosDriverNodelet::InitializeRawHub(ros::NodeHandle &pnh, const double publish_frequency)
-    {
-        ROS_INFO("Data Source is hub.");
-
-        std::string user_config_path;
-        pnh.getParam("user_config_path", user_config_path);
-        ROS_INFO("Config file : %s", user_config_path.c_str());
-
-        std::string cmdline_bd_code;
-        pnh.getParam("cmdline_str", cmdline_bd_code);
-
-        std::vector<std::string> bd_code_list;
-        ParseCommandlineInputBdCode(cmdline_bd_code.c_str(), bd_code_list);
-
-        LdsHub *read_hub = LdsHub::GetInstance(1000 / publish_frequency);
-        lddc_->RegisterLds(static_cast<Lds *>(read_hub));
-        const int lidar_hub_initialization = read_hub->InitLdsHub(bd_code_list, user_config_path.c_str());
-        constexpr int SUCCESS = 0;
-        if (SUCCESS != lidar_hub_initialization)
-        {
-            ROS_ERROR("Init lds hub fail!");
-            return false;
-        }
-
-        ROS_INFO("Init lds hub success!");
-        return true;
-    }
-
-    bool LivoxRosDriverNodelet::InitializeLvxFile(ros::NodeHandle &pnh, const double publish_frequency)
-    {
-        ROS_INFO("Data Source is lvx file.");
-
-        std::string cmdline_file_path;
-        pnh.getParam("cmdline_file_path", cmdline_file_path);
-
-        if (!IsFilePathValid(cmdline_file_path.c_str()))
-        {
-            ROS_ERROR("File path invalid : %s !", cmdline_file_path.c_str());
-            return false;
-        }
-
-        std::string rosbag_file_path;
-        int path_end_pos = cmdline_file_path.find_last_of('.');
-        rosbag_file_path = cmdline_file_path.substr(0, path_end_pos);
-        rosbag_file_path += ".bag";
-
-        LdsLvx *read_lvx = LdsLvx::GetInstance(1000 / publish_frequency);
-        lddc_->RegisterLds(static_cast<Lds *>(read_lvx));
-        lddc_->CreateBagFile(rosbag_file_path);
-        const int livox_file_initialization = read_lvx->InitLdsLvx(cmdline_file_path.c_str());
-        constexpr int SUCCESS = 0;
-        if (SUCCESS != livox_file_initialization)
-        {
-            ROS_ERROR("Init lds lvx file fail!");
-            return false;
-        }
-
-        ROS_INFO("Init lds lvx file success!");
-        return true;
-    }
-
     std::optional<UserRawConfig> LivoxRosDriverNodelet::GetLidarConfig(ros::NodeHandle& pnh)
     {
         // Check whether the lidar config is available.
@@ -229,21 +154,13 @@ namespace livox_ros
 
         // Check whether the broadcast code is specified.
         ros::NodeHandle config_nh(pnh, "lidar_config");
-        if (!config_nh.hasParam("broadcast_code"))
-        {
-            // No broadcast code, use automatic connection mode.
-            return std::nullopt;
-        }
 
         // Pull the config from the ROS param server.
         UserRawConfig lidar_config;
-        std::string broadcast_code;
         int return_mode = 0;
         int coordinate = 0;
         int imu_rate = 1;
         int extrinsic_parameter_source = 0;
-        config_nh.getParam("broadcast_code", broadcast_code);
-        config_nh.getParam("enable_connect", lidar_config.enable_connect);
         config_nh.getParam("enable_fan", lidar_config.enable_fan);
         config_nh.getParam("return_mode", return_mode);
         config_nh.getParam("coordinate", coordinate);
@@ -251,32 +168,7 @@ namespace livox_ros
         config_nh.getParam("extrinsic_parameter_source", extrinsic_parameter_source);
         config_nh.getParam("enable_high_sensitivity", lidar_config.enable_high_sensitivity);
 
-        // VALIDATE THE BROADCAST CODE.
-        // The Livox LiDAR broadcast code consists of 15 characters, with a 14-character
-        // serial number plus a character-length additional code.
-
-        // Check if the supplied broadcast code is the correct length.
-        constexpr size_t BROADCAST_CODE_LENGTH = 15;
-        const bool valid_broadcast_code_length = (BROADCAST_CODE_LENGTH == broadcast_code.size());
-        if (!valid_broadcast_code_length)
-        {
-            // Incorrect broadcast code length.
-            return std::nullopt;
-        }
-
-        // Check if the supplied broadcast code is the correct format (i.e. alphanumeric).
-        const bool broadcast_code_is_alphanumeric = std::all_of(
-            broadcast_code.cbegin(),
-            broadcast_code.cend(),
-            [](const char& c) -> bool { return isalnum(c); });
-        if (!broadcast_code_is_alphanumeric)
-        {
-            // Incorrect broadcast code format.
-            return std::nullopt;
-        }
-
         // Copy the ros parameters to the config.
-        strncpy(lidar_config.broadcast_code, broadcast_code.c_str(), BROADCAST_CODE_LENGTH);
         lidar_config.return_mode = return_mode;
         lidar_config.coordinate = coordinate;
         lidar_config.imu_rate = imu_rate;
@@ -296,7 +188,7 @@ namespace livox_ros
 
         // Pull the config from the ROS param server.
         TimeSyncRawConfig timesync_config;
-        ros::NodeHandle config_nh(pnh, "lidar_config");
+        ros::NodeHandle config_nh(pnh, "timesync_config");
         config_nh.getParam("enable_timesync", timesync_config.enable_timesync);
         config_nh.getParam("device_name", timesync_config.device_name);
         config_nh.getParam("comm_device_type", timesync_config.comm_device_type);

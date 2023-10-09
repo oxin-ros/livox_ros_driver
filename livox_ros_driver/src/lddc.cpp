@@ -37,7 +37,6 @@
 #include <livox_ros_driver/CustomMsg.h>
 #include <livox_ros_driver/CustomPoint.h>
 #include "lds_lidar.h"
-#include "lds_lvx.h"
 #include "ldcc_config.h"
 
 namespace livox_ros
@@ -51,7 +50,6 @@ namespace livox_ros
         lds_ = nullptr;
         cur_node_ = nullptr;
         private_node_ = nullptr;
-        bag_ = nullptr;
 
         // Initialise IMU message with constant values
         imu_data_.header.frame_id.assign(config_.imu_frame_id);
@@ -266,21 +264,10 @@ namespace livox_ros
         cloud.data.resize(cloud.row_step); /** Adjust to the real size */
 
 
-        auto publisher = Lddc::GetCurrentPublisher(handle);
-        if (kOutputToRos == config_.output_type)
-        {
-            // UFR change- define ptr to pointcloud msg
-            const sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud);
-            publisher.publish(msg_cloudPtr); // UFR change
-        }
-        else
-        {
-            if (bag_ && config_.lidar_bag)
-            {
-                bag_->write(publisher.getTopic(), ros::Time::now(),
-                            cloud);
-            }
-        }
+        auto& publisher = Lddc::GetCurrentPublisher(handle);
+        // UFR change- define ptr to pointcloud msg
+        const sensor_msgs::PointCloud2Ptr msg_cloudPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloud);
+        publisher.publish(msg_cloudPtr); // UFR change
         if (!lidar->data_is_published)
         {
             lidar->data_is_published = true;
@@ -393,19 +380,9 @@ namespace livox_ros
             last_timestamp = timestamp;
         }
 
-        auto publisher = Lddc::GetCurrentPublisher(handle);
-        if (kOutputToRos == config_.output_type)
-        {
-            publisher.publish(cloud);
-        }
-        else
-        {
-            if (bag_ && config_.lidar_bag)
-            {
-                bag_->write(publisher.getTopic(), ros::Time::now(),
-                            cloud);
-            }
-        }
+        auto& publisher = Lddc::GetCurrentPublisher(handle);
+        publisher.publish(cloud);
+
         if (!lidar->data_is_published)
         {
             lidar->data_is_published = true;
@@ -557,21 +534,8 @@ namespace livox_ros
             ++published_packet;
         }
 
-        auto publisher = Lddc::GetCurrentPublisher(handle);
-        if (kOutputToRos == config_.output_type)
-        {
-            publisher.publish(livox_msg);
-        }
-        else
-        {
-            if (bag_ && config_.lidar_bag)
-            {
-                bag_->write(
-                    publisher.getTopic(),
-                    ros::Time::now(),
-                    livox_msg);
-            }
-        }
+        auto& publisher = Lddc::GetCurrentPublisher(handle);
+        publisher.publish(livox_msg);
 
         if (!lidar->data_is_published)
         {
@@ -605,21 +569,9 @@ namespace livox_ros
         QueuePopUpdate(queue);
         ++published_packet;
 
-        auto publisher = Lddc::GetCurrentImuPublisher(handle);
-        if (kOutputToRos == config_.output_type)
-        {
-            publisher.publish(imu_data_);
-        }
-        else
-        {
-            if (bag_ && config_.imu_bag)
-            {
-                bag_->write(
-                    publisher.getTopic(),
-                    ros::Time::now(),
-                    imu_data_);
-            }
-        }
+        auto& publisher = Lddc::GetCurrentImuPublisher(handle);
+        publisher.publish(imu_data_);
+
         return published_packet;
     }
 
@@ -830,25 +782,8 @@ namespace livox_ros
         return config_.multi_topic ? private_imu_pub_[handle] : global_imu_pub_;
     }
 
-    void Lddc::CreateBagFile(const std::string &file_name)
-    {
-        if (!bag_)
-        {
-            bag_ = new rosbag::Bag;
-            bag_->open(file_name, rosbag::bagmode::Write);
-            ROS_INFO("Create bag file :%s!", file_name.c_str());
-        }
-    }
-
     void Lddc::PrepareExit(void)
     {
-        if (bag_)
-        {
-            ROS_INFO("Waiting to save the bag file!");
-            bag_->close();
-            ROS_INFO("Save the bag file successfully!");
-            bag_ = nullptr;
-        }
         if (lds_)
         {
             lds_->PrepareExit();

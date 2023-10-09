@@ -46,12 +46,7 @@ LdsLidar *g_lds_ldiar = nullptr;
 
 /** Lds lidar function -------------------------------------------------------*/
 LdsLidar::LdsLidar(uint32_t interval_ms) : Lds(interval_ms, kSourceRawLidar) {
-  auto_connect_mode_ = true;
   is_initialized_ = false;
-
-  whitelist_count_ = 0;
-  memset(broadcast_code_whitelist_, 0, sizeof(broadcast_code_whitelist_));
-
   ResetLdsLidar();
 }
 
@@ -59,7 +54,9 @@ LdsLidar::~LdsLidar() {}
 
 void LdsLidar::ResetLdsLidar(void) { ResetLds(kSourceRawLidar); }
 
-int LdsLidar::InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, const std::optional<TimeSyncRawConfig>& timesync_config)
+int LdsLidar::InitLdsLidar(
+  const std::optional<UserRawConfig>& lidar_config,
+  const std::optional<TimeSyncRawConfig>& timesync_config)
 {
   if (is_initialized_) {
     printf("LiDAR data source is already inited!\n");
@@ -85,28 +82,18 @@ int LdsLidar::InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, con
   // Check if the device config is present.
   if (lidar_config.has_value())
   {
-    // Add the device to the whitelist.
-    if (lidar_config->enable_connect)
-    {
-      if (!AddBroadcastCodeToWhitelist(lidar_config->broadcast_code)) {
-        if (AddRawUserConfig(*lidar_config)) {
-          printf("Raw config is already exist : %s \n", lidar_config->broadcast_code);
-        }
-      }
-    }
+    SetRawConfig(*lidar_config);
   }
-
-  if (whitelist_count_) {
-    DisableAutoConnectMode();
-    printf("Disable auto connect mode!\n");
-
-    printf("List all broadcast code in whiltelist:\n");
-    for (uint32_t i = 0; i < whitelist_count_; i++) {
-      printf("%s\n", broadcast_code_whitelist_[i]);
-    }
-  } else {
-    EnableAutoConnectMode();
-    printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
+  else
+  {
+      // Use the default.
+      printf("Could not find raw config, set config to default!\n");
+      raw_config_.enable_fan = 1;
+      raw_config_.return_mode = kFirstReturn;
+      raw_config_.coordinate = kCoordinateCartesian;
+      raw_config_.imu_rate = kImuFreq200Hz;
+      raw_config_.extrinsic_parameter_source = kNoneExtrinsicParameter;
+      raw_config_.enable_high_sensitivity = false;
   }
 
   // Check if the timesync config is present.
@@ -131,81 +118,6 @@ int LdsLidar::InitLdsLidar(const std::optional<UserRawConfig>& lidar_config, con
 
       timesync_->StartTimesync();
     }
-  }
-
-  /** Start livox sdk to receive lidar data */
-  if (!Start()) {
-    Uninit();
-    printf("Livox-SDK init fail!\n");
-    return -1;
-  }
-
-  /** Add here, only for callback use */
-  if (g_lds_ldiar == nullptr) {
-    g_lds_ldiar = this;
-  }
-  is_initialized_ = true;
-  printf("Livox-SDK init success!\n");
-
-  return 0;
-}
-
-int LdsLidar::InitLdsLidar(std::vector<std::string> &broadcast_code_strs,
-                           const char *user_config_path) {
-  if (is_initialized_) {
-    printf("LiDAR data source is already inited!\n");
-    return -1;
-  }
-
-  if (!Init()) {
-    Uninit();
-    printf("Livox-SDK init fail!\n");
-    return -1;
-  }
-
-  LivoxSdkVersion _sdkversion;
-  GetLivoxSdkVersion(&_sdkversion);
-  printf("Livox SDK version %d.%d.%d\n",
-    _sdkversion.major,
-    _sdkversion.minor,
-    _sdkversion.patch);
-
-  SetBroadcastCallback(OnDeviceBroadcast);
-  SetDeviceStateUpdateCallback(OnDeviceChange);
-
-  /** Add commandline input broadcast code */
-  for (auto input_str : broadcast_code_strs) {
-    AddBroadcastCodeToWhitelist(input_str.c_str());
-  }
-
-  ParseConfigFile(user_config_path);
-
-  if (whitelist_count_) {
-    DisableAutoConnectMode();
-    printf("Disable auto connect mode!\n");
-
-    printf("List all broadcast code in whiltelist:\n");
-    for (uint32_t i = 0; i < whitelist_count_; i++) {
-      printf("%s\n", broadcast_code_whitelist_[i]);
-    }
-  } else {
-    EnableAutoConnectMode();
-    printf("No broadcast code was added to whitelist, switching to automatic connection mode!\n");
-  }
-
-  if (enable_timesync_) {
-    timesync_ = TimeSync::GetInstance();
-    if (timesync_->InitTimeSync(timesync_config_)) {
-      printf("Timesync init fail\n");
-      return -1;
-    }
-
-    if (timesync_->SetReceiveSyncTimeCb(ReceiveSyncTimeCallback, this)) {
-      printf("Set Timesync callback fail\n");
-      return -1;
-    }
-
-    timesync_->StartTimesync();
   }
 
   /** Start livox sdk to receive lidar data */
@@ -271,17 +183,6 @@ void LdsLidar::OnDeviceBroadcast(const BroadcastDeviceInfo *info) {
     return;
   }
 
-  if (g_lds_ldiar->IsAutoConnectMode()) {
-    printf("In automatic connection mode, will connect %s\n",
-           info->broadcast_code);
-  } else {
-    if (!g_lds_ldiar->IsBroadcastCodeExistInWhitelist(info->broadcast_code)) {
-      printf("Not in the whitelist, please add %s to if want to connect!\n",
-             info->broadcast_code);
-      return;
-    }
-  }
-
   bool result = false;
   uint8_t handle = 0;
   result = AddLidarToConnect(info->broadcast_code, &handle);
@@ -292,17 +193,7 @@ void LdsLidar::OnDeviceBroadcast(const BroadcastDeviceInfo *info) {
     p_lidar->handle = handle;
     p_lidar->connect_state = kConnectStateOff;
 
-    UserRawConfig config;
-    if (g_lds_ldiar->GetRawConfig(info->broadcast_code, config)) {
-      printf("Could not find raw config, set config to default!\n");
-      config.enable_fan = 1;
-      config.return_mode = kFirstReturn;
-      config.coordinate = kCoordinateCartesian;
-      config.imu_rate = kImuFreq200Hz;
-      config.extrinsic_parameter_source = kNoneExtrinsicParameter;
-      config.enable_high_sensitivity = false;
-    }
-
+    UserRawConfig config = g_lds_ldiar->GetConfig();
     p_lidar->config.enable_fan = config.enable_fan;
     p_lidar->config.return_mode = config.return_mode;
     p_lidar->config.coordinate = config.coordinate;
@@ -644,39 +535,6 @@ void LdsLidar::ReceiveSyncTimeCallback(const char *rmc, uint32_t rmc_length,
   }
 }
 
-/** Add broadcast code to whitelist */
-int LdsLidar::AddBroadcastCodeToWhitelist(const char *broadcast_code) {
-  if (!broadcast_code || (strlen(broadcast_code) > kBroadcastCodeSize) ||
-      (whitelist_count_ >= kMaxLidarCount)) {
-    return -1;
-  }
-
-  if (LdsLidar::IsBroadcastCodeExistInWhitelist(broadcast_code)) {
-    printf("%s is alrealy exist!\n", broadcast_code);
-    return -1;
-  }
-
-  strcpy(broadcast_code_whitelist_[whitelist_count_], broadcast_code);
-  ++whitelist_count_;
-
-  return 0;
-}
-
-bool LdsLidar::IsBroadcastCodeExistInWhitelist(const char *broadcast_code) {
-  if (!broadcast_code) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < whitelist_count_; i++) {
-    if (strncmp(broadcast_code, broadcast_code_whitelist_[i],
-                kBroadcastCodeSize) == 0) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 int LdsLidar::ParseTimesyncConfig(const TimeSyncRawConfig& timesync_config)
 {
   // Store the timesync enable flag.
@@ -711,197 +569,6 @@ int LdsLidar::ParseTimesyncConfig(const TimeSyncRawConfig& timesync_config)
     printf("Disable timesync\n");
   }
   return 0;
-}
-
-int LdsLidar::ParseTimesyncConfig(rapidjson::Document &doc) {
-  do {
-    if (!doc.HasMember("timesync_config") || !doc["timesync_config"].IsObject())
-      break;
-
-    const rapidjson::Value &object = doc["timesync_config"];
-    if (!object.IsObject()) break;
-
-    if (!object.HasMember("enable_timesync") ||
-        !object["enable_timesync"].IsBool())
-      break;
-    enable_timesync_ = object["enable_timesync"].GetBool();
-
-    if (!object.HasMember("device_name") || !object["device_name"].IsString())
-      break;
-    std::string device_name = object["device_name"].GetString();
-    std::strncpy(timesync_config_.dev_config.name, device_name.c_str(),
-                 sizeof(timesync_config_.dev_config.name));
-
-    if (!object.HasMember("comm_device_type") ||
-        !object["comm_device_type"].IsInt())
-      break;
-    timesync_config_.dev_config.type = object["comm_device_type"].GetInt();
-
-    if (timesync_config_.dev_config.type == kCommDevUart) {
-      if (!object.HasMember("baudrate_index") ||
-          !object["baudrate_index"].IsInt())
-        break;
-      timesync_config_.dev_config.config.uart.baudrate =
-          object["baudrate_index"].GetInt();
-
-      if (!object.HasMember("parity_index") || !object["parity_index"].IsInt())
-        break;
-      timesync_config_.dev_config.config.uart.parity =
-          object["parity_index"].GetInt();
-    }
-
-    if (enable_timesync_) {
-      printf("Enable timesync : \n");
-      if (timesync_config_.dev_config.type == kCommDevUart) {
-        printf("Uart[%s],baudrate index[%d],parity index[%d]\n",
-               timesync_config_.dev_config.name,
-               timesync_config_.dev_config.config.uart.baudrate,
-               timesync_config_.dev_config.config.uart.parity);
-      }
-    } else {
-      printf("Disable timesync\n");
-    }
-    return 0;
-  } while (0);
-
-  return -1;
-}
-
-/** Config file process */
-int LdsLidar::ParseConfigFile(const char *pathname) {
-  FILE *raw_file = std::fopen(pathname, "rb");
-  if (!raw_file) {
-    printf("Open json config file fail!\n");
-    return -1;
-  }
-
-  char read_buffer[32768];
-  rapidjson::FileReadStream config_file(raw_file, read_buffer,
-                                        sizeof(read_buffer));
-
-  rapidjson::Document doc;
-  if (!doc.ParseStream(config_file).HasParseError()) {
-    if (doc.HasMember("lidar_config") && doc["lidar_config"].IsArray()) {
-      const rapidjson::Value &array = doc["lidar_config"];
-      size_t len = array.Size();
-      for (size_t i = 0; i < len; i++) {
-        const rapidjson::Value &object = array[i];
-        if (object.IsObject()) {
-          UserRawConfig config = {0};
-          memset(&config, 0, sizeof(config));
-          if (object.HasMember("broadcast_code") &&
-              object["broadcast_code"].IsString()) {
-            std::string broadcast_code = object["broadcast_code"].GetString();
-            std::strncpy(config.broadcast_code, broadcast_code.c_str(),
-                         sizeof(config.broadcast_code));
-          } else {
-            printf("User config file parse error\n");
-            continue;
-          }
-
-          if (object.HasMember("enable_connect") &&
-              object["enable_connect"].IsBool()) {
-            config.enable_connect = object["enable_connect"].GetBool();
-          }
-          if (object.HasMember("enable_fan") && object["enable_fan"].IsBool()) {
-            config.enable_fan = object["enable_fan"].GetBool();
-          }
-          if (object.HasMember("return_mode") &&
-              object["return_mode"].IsInt()) {
-            config.return_mode = object["return_mode"].GetInt();
-          }
-          if (object.HasMember("coordinate") && object["coordinate"].IsInt()) {
-            config.coordinate = object["coordinate"].GetInt();
-          }
-          if (object.HasMember("imu_rate") && object["imu_rate"].IsInt()) {
-            config.imu_rate = object["imu_rate"].GetInt();
-          }
-          if (object.HasMember("extrinsic_parameter_source") &&
-              object["extrinsic_parameter_source"].IsInt()) {
-            config.extrinsic_parameter_source =
-                object["extrinsic_parameter_source"].GetInt();
-          }
-          if (object.HasMember("enable_high_sensitivity") &&
-              object["enable_high_sensitivity"].GetBool()) {
-            config.enable_high_sensitivity =
-                object["enable_high_sensitivity"].GetBool();
-          }
-
-          printf("broadcast code[%s] : %d %d %d %d %d %d\n",
-                 config.broadcast_code, config.enable_connect,
-                 config.enable_fan, config.return_mode, config.coordinate,
-                 config.imu_rate, config.extrinsic_parameter_source);
-          if (config.enable_connect) {
-            if (!AddBroadcastCodeToWhitelist(config.broadcast_code)) {
-              if (AddRawUserConfig(config)) {
-                printf("Raw config is already exist : %s \n",
-                       config.broadcast_code);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (ParseTimesyncConfig(doc)) {
-      printf("Parse timesync config fail\n");
-      enable_timesync_ = false;
-    }
-  } else {
-    printf("User config file parse error[%d]\n",
-           doc.ParseStream(config_file).HasParseError());
-  }
-
-  std::fclose(raw_file);
-
-  return 0;
-}
-
-int LdsLidar::AddRawUserConfig(const UserRawConfig& config) {
-  if (IsExistInRawConfig(config.broadcast_code)) {
-    return -1;
-  }
-
-  raw_config_.push_back(config);
-  printf("Add Raw user config : %s \n", config.broadcast_code);
-
-  return 0;
-}
-
-bool LdsLidar::IsExistInRawConfig(const char *broadcast_code) {
-  if (broadcast_code == nullptr) {
-    return false;
-  }
-
-  for (auto ite_config : raw_config_) {
-    if (strncmp(ite_config.broadcast_code, broadcast_code,
-                kBroadcastCodeSize) == 0) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-int LdsLidar::GetRawConfig(const char *broadcast_code, UserRawConfig &config) {
-  if (broadcast_code == nullptr) {
-    return -1;
-  }
-
-  for (auto ite_config : raw_config_) {
-    if (strncmp(ite_config.broadcast_code, broadcast_code,
-                kBroadcastCodeSize) == 0) {
-      config.enable_fan = ite_config.enable_fan;
-      config.return_mode = ite_config.return_mode;
-      config.coordinate = ite_config.coordinate;
-      config.imu_rate = ite_config.imu_rate;
-      config.extrinsic_parameter_source = ite_config.extrinsic_parameter_source;
-      config.enable_high_sensitivity = ite_config.enable_high_sensitivity;
-      return 0;
-    }
-  }
-
-  return -1;
 }
 
 }  // namespace livox_ros
