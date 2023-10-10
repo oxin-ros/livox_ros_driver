@@ -1,6 +1,19 @@
 # Copyright(c) 2019 livoxtech limited.
+cmake_minimum_required(VERSION 3.10.2)
 
-cmake_minimum_required(VERSION 3.0)
+#---------------------------------------------------------------------------------------
+# Set default build to release
+#---------------------------------------------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
+endif()
+
+#---------------------------------------------------------------------------------------
+# Compiler config
+#---------------------------------------------------------------------------------------
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 #---------------------------------------------------------------------------------------
 # Start livox_ros_driver project
@@ -35,8 +48,9 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## Find pcl lib.
-# Use PCL packaged in our docker container.
-find_package(PCL 1.12 REQUIRED)
+find_package(PCL QUIET REQUIRED)
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 ## Generate messages in the 'msg' folder
 add_message_files(FILES
@@ -72,24 +86,6 @@ catkin_package(CATKIN_DEPENDS
     rospy
     std_msgs
 )
-
-#---------------------------------------------------------------------------------------
-# Set default build to release
-#---------------------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
-endif()
-
-#---------------------------------------------------------------------------------------
-# Compiler config
-#---------------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-## PCL library
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
 
 #---------------------------------------------------------------------------------------
 # generate excutable and add libraries
