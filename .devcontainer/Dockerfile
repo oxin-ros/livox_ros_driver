@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG ROS_VERSION="noetic"
-FROM ros:${ROS_VERSION}-ros-base
+ARG ROS_DISTRO="noetic"
+FROM ros:${ROS_DISTRO}-ros-base
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -8,33 +8,22 @@ SHELL [ "/bin/bash", "-c" ]
 ARG LOCAL_MIRROR_URI=nz.archive.ubuntu.com
 RUN sed -i -e s/archive.ubuntu.com/${LOCAL_MIRROR_URI}/g /etc/apt/sources.list
 
-# Install Kitware APT repo.
-# This repo contains an updated CMake package.
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-        wget \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean \
-    && wget -qq https://apt.kitware.com/kitware-archive.sh \
-    && chmod +x kitware-archive.sh \
-    && ./kitware-archive.sh \
-    && rm ./kitware-archive.sh
-
 # Install APT depenencies
-ARG ROS_VERSION="noetic"
+ARG ROS_DISTRO="noetic"
+ARG PYTHON_VERSION="python3"
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes \
         build-essential \
         cmake \
         gdb \
         git \
-        python3-catkin-tools \
-        python3-rosdep \
-        python3-rosinstall \
-        python3-vcstool \
+        ${PYTHON_VERSION}-catkin-tools \
+        ${PYTHON_VERSION}-rosdep \
+        ${PYTHON_VERSION}-rosinstall \
+        ${PYTHON_VERSION}-vcstool \
         libpcl-dev \
-        ros-${ROS_VERSION}-pcl-ros \
-        ros-${ROS_VERSION}-rviz \
+        ros-${ROS_DISTRO}-pcl-ros \
+        ros-${ROS_DISTRO}-rviz \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
