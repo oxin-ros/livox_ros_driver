@@ -31,7 +31,7 @@
 
 namespace livox_ros {
 
-const uint32_t KEthPacketMaxLength = 1500;
+constexpr uint32_t KEthPacketMaxLength = 1500;
 
 #pragma pack(1)
 

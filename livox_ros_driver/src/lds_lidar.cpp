@@ -24,15 +24,12 @@
 
 #include "lds_lidar.h"
 
-#include <stdio.h>
-#include <string.h>
+#include <cstring>
 #include <memory>
 #include <mutex>
+#include <stdio.h>
+#include <string.h>
 #include <thread>
-
-#include "rapidjson/document.h"
-#include "rapidjson/filereadstream.h"
-#include "rapidjson/stringbuffer.h"
 
 using namespace std;
 

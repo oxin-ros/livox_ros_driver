@@ -142,8 +142,6 @@ target_include_directories(${PROJECT_NAME}_node
     ${PCL_INCLUDE_DIRS}
     ${APR_INCLUDE_DIRS}
     common
-    common/rapidjson
-    comon/rapdidxml
     common/comm
     timesync
     timesync/user_uart
@@ -169,8 +167,6 @@ include_directories(
     ${PCL_INCLUDE_DIRS}
     common
     common/comm
-    common/rapidjson
-    comon/rapdidxml
     include
     timesync
     timesync/user_uart
