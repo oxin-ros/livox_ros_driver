@@ -24,6 +24,7 @@ RUN apt-get update \
         libpcl-dev \
         ros-${ROS_DISTRO}-pcl-ros \
         ros-${ROS_DISTRO}-rviz \
+        ssh \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
