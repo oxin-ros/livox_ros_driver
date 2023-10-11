@@ -30,7 +30,7 @@ lidar_config:
   # The publish frequency of the IMU.
   # - 0: IMU off.
   # - 1: IMU on @ 200Hz.
-  imu_rate: 0
+  imu_rate: 1
   # Whether to enable extrinsic parameter automatic compensation.
   # - 0: Automatic compensation off.
   # - 1: Automatic compensation on.
