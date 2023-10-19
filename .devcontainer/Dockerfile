@@ -1,7 +1,6 @@
-
-ARG VARIANT="bionic"
-ARG ROS_VERSION="melodic"
-FROM ros:${ROS_VERSION}-ros-base-${VARIANT}
+# syntax=docker/dockerfile:1
+ARG ROS_DISTRO="noetic"
+FROM ros:${ROS_DISTRO}-ros-base
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -9,30 +8,22 @@ SHELL [ "/bin/bash", "-c" ]
 ARG LOCAL_MIRROR_URI=nz.archive.ubuntu.com
 RUN sed -i -e s/archive.ubuntu.com/${LOCAL_MIRROR_URI}/g /etc/apt/sources.list
 
-# Install Kitware APT repo.
-# This repo contains an updated CMake package.
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-        wget \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean \
-    && wget -qq https://apt.kitware.com/kitware-archive.sh \
-    && chmod +x kitware-archive.sh \
-    && ./kitware-archive.sh \
-    && rm ./kitware-archive.sh
-
 # Install APT depenencies
+ARG ROS_DISTRO="noetic"
+ARG PYTHON_VERSION="python3"
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes \
         build-essential \
         cmake \
         gdb \
+        git \
+        ${PYTHON_VERSION}-catkin-tools \
+        ${PYTHON_VERSION}-rosdep \
+        ${PYTHON_VERSION}-rosinstall \
+        ${PYTHON_VERSION}-vcstool \
         libpcl-dev \
-        python-catkin-tools \
-        python-rosdep \
-        python-rosinstall \
-        python-vcstool \
-        ros-melodic-pcl-ros \
+        ros-${ROS_DISTRO}-pcl-ros \
+        ros-${ROS_DISTRO}-rviz \
         ssh \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
@@ -50,6 +41,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(ALL\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 USER $USERNAME
+
+# Create the XDG_RUNTIME_DIR
+RUN sudo mkdir -p /tmp/vscode \
+    && sudo chown -R $USERNAME:$USERNAME /tmp/vscode
 
 # Install Livox-SDK.
 WORKDIR /tmp
