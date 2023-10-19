@@ -62,7 +62,6 @@ namespace livox_ros
                      _sdkversion.minor, _sdkversion.patch);
             return;
         }
-        signal(SIGINT, SignalHandler);
 
         /** Init default system parameter */
         LdccConfig ldcc_config;
@@ -98,6 +97,11 @@ namespace livox_ros
         default:
             ROS_ERROR("Unsupported data source: %i", ldcc_config.data_src);
             throw std::runtime_error("Unsupported data source");
+        }
+
+        if (!lidar_data_source_initialized)
+        {
+            throw std::runtime_error("Failed to initialize data source");
         }
 
         const double poll_freq = ldcc_config.frequency * 4;
@@ -195,13 +199,6 @@ namespace livox_ros
         config_nh.getParam("baudrate_index", timesync_config.baudrate_index);
         config_nh.getParam("parity_index", timesync_config.parity_index);
         return timesync_config;
-    }
-
-    void LivoxRosDriverNodelet::SignalHandler(int signum)
-    {
-        printf("livox ros driver will exit\r\n");
-        ros::shutdown();
-        exit(signum);
     }
 
 } // namespace

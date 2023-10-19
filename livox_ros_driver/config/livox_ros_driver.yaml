@@ -22,7 +22,7 @@ lidar_config:
   # - 1: Strongest Return
   # - 2: Dual Return
   # - 3: Triple Return (Avia only)
-  return_mode: 3
+  return_mode: 1
   # The coordinate system of the points.
   # - 0: Cartesian
   # - 1: Spherical

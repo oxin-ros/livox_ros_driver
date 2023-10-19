@@ -461,7 +461,7 @@ class Lds {
   uint8_t data_src_;
 
  private:
-  volatile bool request_exit_;
+  bool request_exit_;
 };
 
 }  // namespace livox_ros

@@ -57,8 +57,6 @@ class LivoxRosDriverNodelet : public nodelet::Nodelet
         std::optional<UserRawConfig> GetLidarConfig(ros::NodeHandle& nh);
         std::optional<TimeSyncRawConfig> GetTimesyncConfig(ros::NodeHandle& nh);
 
-        static void SignalHandler(int signum);
-
         std::unique_ptr<livox_ros::Lddc> lddc_;
         ros::Timer poll_lidars_;
 
