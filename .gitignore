@@ -1,8 +1,10 @@
+# Ignore catkin folders.
+.catkin_tools
+build
+devel
+install
+logs
 
-# ignore dir or file
-CMakeLists.txt
+# Ignore the SDK folder.
 livox_ros_driver/Livox-SDK
-#whitelist
-
-
-
+src/Livox-SDK

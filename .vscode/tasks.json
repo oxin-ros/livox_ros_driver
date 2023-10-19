@@ -1,0 +1,68 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "ros",
+			"command": "roscore",
+			"problemMatcher": [
+				"$roscore"
+			],
+			"label": "roscore: roscore"
+		},
+		{
+			"type": "ros",
+			"command": "roslaunch",
+			"args": [
+				"package_name",
+				"launch_file.launch"
+			],
+			"problemMatcher": [
+				"$roslaunch"
+			],
+			"label": "roslaunch: roslaunch"
+		},
+		{
+			"type": "shell",
+			"command": "source /workspace/install/setup.bash",
+			"label": "source_workspace"
+		},
+		{
+			"type": "catkin",
+			"args": [
+				"--workspace",
+				"/workspace"
+			],
+			"problemMatcher": [
+				"$catkin-gcc"
+			],
+			"group": "build",
+			"label": "catkin: build"
+		},
+		{
+			"label": "make_debug",
+			"type": "catkin",
+			"args": [
+				"build",
+				"--workspace",
+				"/workspace",
+				"-DCMAKE_BUILD_TYPE=Debug"
+			],
+			"problemMatcher": [
+				"$catkin-gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "make_debug_and_core",
+			"dependsOrder": "sequence",
+			"dependsOn":[
+				"make_debug",
+				"source_workspace",
+				"roscore: roscore"
+			]
+		}
+	]
+}
