@@ -6,8 +6,8 @@
         "args": {
             "LIVOX_SDK_BRANCH": "master",
             "LIVOX_SDK_BUILD_TYPE": "Debug",
-            "ROS_DISTRO": "melodic",
-            "PYTHON_VERSION": "python" // For Noetic: 'python3'.
+            "ROS_DISTRO": "noetic",
+            "PYTHON_VERSION": "python3" // For Noetic: 'python3'.
         }
     },
     "containerUser": "vscode",
@@ -70,5 +70,6 @@
     "remoteUser": "vscode",
     "updateRemoteUserUID": false,
     "initializeCommand": "xhost +local:docker",
+    "postCreateCommand": "bash src/.devcontainer/rosdep-update.sh",
     "postStartCommand": "bash src/.devcontainer/configure-catkin.sh"
 }

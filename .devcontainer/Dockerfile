@@ -61,8 +61,18 @@ RUN git clone -b ${LIVOX_SDK_BRANCH} https://github.com/oxin-ros/Livox-SDK.git s
     && rm -rf /tmp/src
 WORKDIR /workspace
 
+# UPDATE ROS DEPENDENCIES.
+# Check if rosdep is initialized.
+RUN if [ ! -e /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi
+RUN rosdep update --rosdistro=${ROS_DISTRO}
+
 # Automatically source ros in each terminal.
 RUN echo 'source /opt/ros/${ROS_DISTRO}/setup.bash' >> /home/${USERNAME}/.bashrc
+ARG WORKSPACE_DIR=/workspace
+ENV CATKIN_DEVEL_SETUP_PATH "$WORKSPACE_DIR/devel/setup.bash"
+RUN echo "[[ -f $CATKIN_DEVEL_SETUP_PATH ]] && . $CATKIN_DEVEL_SETUP_PATH" >> /home/$USERNAME/.bashrc
+ENV CATKIN_INSTALL_SETUP_PATH "$WORKSPACE_DIR/install/setup.bash"
+RUN echo "[[ -f $CATKIN_INSTALL_SETUP_PATH ]] && . $CATKIN_INSTALL_SETUP_PATH" >> /home/$USERNAME/.bashrc
 
 # Setup entrypoint.
 COPY ros-entrypoint.sh /ros-entrypoint.sh
