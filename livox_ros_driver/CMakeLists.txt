@@ -12,7 +12,7 @@ message(STATUS "livox_ros_driver version: ${LIVOX_ROS_DRIVER_VERSION}")
 #---------------------------------------------------------------------------------------
 # find package and the dependecy
 #---------------------------------------------------------------------------------------
-find_package(Boost 1.54 REQUIRED COMPONENTS
+find_package(Boost REQUIRED COMPONENTS
     system
     thread
     chrono
@@ -193,8 +193,12 @@ target_link_libraries(${PROJECT_NAME}_nodelet
     ${APR_LIBRARIES}
     )
 
-add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS}
-                 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${${PROJECT_NAME}_nodelet_EXPORTED_TARGETS})
+add_dependencies(
+    ${PROJECT_NAME}_nodelet
+    ${PROJECT_NAME}_generate_messages_cpp
+    ${catkin_EXPORTED_TARGETS}
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${${PROJECT_NAME}_nodelet_EXPORTED_TARGETS})
 
 #---------------------------------------------------------------------------------------
 # Install

@@ -1,4 +1,10 @@
 {
+    "python.autoComplete.extraPaths": [
+        "/opt/ros/${ROS_DISTRO}/lib/python2.7/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/opt/ros/${ROS_DISTRO}/lib/python2.7/dist-packages"
+    ],
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",

@@ -6,4 +6,4 @@ source /opt/ros/$ROS_DISTRO/setup.sh
 catkin init
 
 # Configure the workspace
-catkin config --install
+catkin config
