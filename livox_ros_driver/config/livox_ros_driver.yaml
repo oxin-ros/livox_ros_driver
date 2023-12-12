@@ -1,0 +1,72 @@
+# The published point cloud format:
+# - 0: Livox pointcloud2 (PointXYZRTL) pointcloud format
+# - 1: Livox customized pointcloud format
+# - 2: Standard pointcloud2 (pcl::PointXYZI) pointcloud format in the PCL library
+xfer_format: 0
+# If the LiDAR device has an independent topic to publish pointcloud data
+# - 0: All LiDAR devices use the same topic to publish pointcloud data
+# - 1: Each LiDAR device has its own topic to publish point cloud data
+multi_topic: 0
+# The frequency that the point cloud should be published.
+publish_freq: 10.0
+# The frame ID of the lidar.
+lidar_frame_id: livox_frame
+# The frame ID of the IMU.
+imu_frame_id: livox_frame
+
+lidar_config:
+  # Whether the fan should be enabled.
+  enable_fan: true
+  # The return pattern of the Lidar.
+  # - 0: Single Return
+  # - 1: Strongest Return
+  # - 2: Dual Return
+  # - 3: Triple Return (Avia only)
+  return_mode: 1
+  # The coordinate system of the points.
+  # - 0: Cartesian
+  # - 1: Spherical
+  coordinate: 0
+  # The publish frequency of the IMU.
+  # - 0: IMU off.
+  # - 1: IMU on @ 200Hz.
+  imu_rate: 1
+  # Whether to enable extrinsic parameter automatic compensation.
+  # - 0: Automatic compensation off.
+  # - 1: Automatic compensation on.
+  extrinsic_parameter_source: 0
+  # Whether to enable high sensitivity mode.
+  enable_high_sensitivity: true
+timesync_config:
+  # Whether to enable the timestamp synchronization
+  enable_timesync: false
+  # Name of the serial device to be connected,
+  device_name: /dev/ttyUSB0
+  # Type of device sending timestamp information
+  # - 0: Serial port or USB virtual serial port device
+  comm_device_type: 0
+  # Baud rate of serial device
+  # - 0: 2400
+  # - 1: 4800
+  # - 2: 9600
+  # - 3: 19200
+  # - 4: 38400
+  # - 5: 57600
+  # - 6: 115200
+  # - 7: 230400
+  # - 8: 460800
+  # - 9: 500000
+  # - 10: 576000
+  # - 11: 921600
+  baudrate_index: 2
+  # Parity type
+  # - 0: 8bits data without parity
+  # - 1: 7bits data 1bit even parity
+  # - 2: 7bits data 1bit odd parity
+  # - 3: 7bits data 1bit 0, without parity
+  parity_index: 0
+
+# The angular velocity covariance matrix.
+angular_velocity_cov: [1.44e-4, 0.0, 0.0, 0.0, 1.44e-4, 0.0, 0.0, 0.0, 1.44e-4 ]
+# The linear acceration convariance matrix.
+linear_acceleration_cov: [9.604e-3, 0.0, 0.0, 0.0, 9.604e-3, 0.0, 0.0, 0.0, 9.604e-3 ]

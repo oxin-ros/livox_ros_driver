@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------------------------
 # Get livox_ros_driver version from include/livox_ros_driver.h
 #---------------------------------------------------------------------------------------
-file(READ "${CMAKE_CURRENT_LIST_DIR}/../livox_ros_driver/include/livox_ros_driver.h" LIVOX_ROS_DRIVER_VERSION_FILE)
+file(READ "${CMAKE_CURRENT_LIST_DIR}/../include/livox_ros_driver_version.h" LIVOX_ROS_DRIVER_VERSION_FILE)
 string(REGEX MATCH "LIVOX_ROS_DRIVER_VER_MAJOR ([0-9]+)" _  "${LIVOX_ROS_DRIVER_VERSION_FILE}")
 set(ver_major ${CMAKE_MATCH_1})
 
